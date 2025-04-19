@@ -1,7 +1,10 @@
 package agents
 
 import (
+<<<<<<< HEAD
     "holoplan-cli/src/shared"
+=======
+>>>>>>> origin/main
 	"bytes"
 	"encoding/json"
 	"fmt"
@@ -9,6 +12,10 @@ import (
 	"os"
 	"strings"
 
+<<<<<<< HEAD
+=======
+	"holoplan-cli/src/shared"
+>>>>>>> origin/main
 	"holoplan-cli/src/types"
 )
 
@@ -59,6 +66,7 @@ func callOllamaForLayout(prompt string) (string, error) {
 	}
 	return output.Response, nil
 }
+<<<<<<< HEAD
 
 // Extracts XML portion from model output
 	start := strings.Index(response, "<")
@@ -67,3 +75,5 @@ func callOllamaForLayout(prompt string) (string, error) {
 	}
 	return response[start:]
 }
+=======
+>>>>>>> origin/main

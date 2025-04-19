@@ -1,13 +1,13 @@
 package agents
 
 import (
-    "holoplan-cli/src/shared"
 	"bytes"
 	"encoding/json"
 	"fmt"
 	"net/http"
 	"strings"
 
+	"holoplan-cli/src/shared"
 	"holoplan-cli/src/types"
 )
 
@@ -72,12 +72,4 @@ func callOllamaForCorrection(prompt string) (string, error) {
 	}
 
 	return output.Response, nil
-}
-
-// Attempts to clean up and extract just the XML portion from the LLM response
-	start := strings.Index(response, "<")
-	if start == -1 {
-		return response // no '<' found, return raw
-	}
-	return response[start:]
 }
