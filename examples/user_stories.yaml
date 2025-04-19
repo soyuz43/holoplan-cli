@@ -1,0 +1,20 @@
+- id: "US-001"
+  title: "List Adoptable Dogs"
+  narrative: |
+    As a visitor,
+    I want to see a list of dogs available for adoption,
+    so that I can choose one to learn more about.
+
+- id: "US-002"
+  title: "View Dog Details"
+  narrative: |
+    As a user,
+    I want to click on a dog card,
+    so I can view its profile and start the adoption process.
+
+- id: "US-003"
+  title: "Submit Adoption Request"
+  narrative: |
+    As a visitor,
+    I want to fill out an adoption form,
+    so that I can express interest in adopting a specific dog.
