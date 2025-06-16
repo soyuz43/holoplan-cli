@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"log"
 	"os"
@@ -29,7 +30,15 @@ const MaxCorrections = 3
 
 func main() {
 	// 1. Load user stories (to be implemented)
-	stories, err := LoadStories("examples/user_stories.yaml")
+	storyPath := flag.String("stories", "", "Path to user stories YAML")
+	flag.Parse()
+
+	if *storyPath == "" {
+		log.Fatalf("❌ Please provide a path to a YAML file using --stories")
+	}
+
+	stories, err := LoadStories(*storyPath)
+
 	if err != nil {
 		log.Fatalf("Error loading stories: %v", err)
 	}
