@@ -1,3 +1,4 @@
+// src\agents\auditor.go
 package agents
 
 import (
