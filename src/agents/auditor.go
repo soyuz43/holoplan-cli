@@ -1,3 +1,4 @@
+// src\agents\auditor.go
 package agents
 
 import (
@@ -58,7 +59,7 @@ func extractIssues(text string) []string {
 
 func callOllama(prompt string) (string, error) {
 	body := map[string]string{
-		"model":  "llama3.1:8b", // or whichever model is running
+		"model":  "llama3.1:8b",
 		"prompt": prompt,
 	}
 	b, _ := json.Marshal(body)

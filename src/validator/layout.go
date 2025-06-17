@@ -8,7 +8,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/beevik/etree"
+	"holoplan-cli/src/shared"
 )
 
 var Debug = false
@@ -37,38 +37,12 @@ type mxGraphModel struct {
 	Cells []mxCell `xml:"root>mxCell"`
 }
 
-func trySanitize(raw string) (string, error) {
-	doc := etree.NewDocument()
-	if err := doc.ReadFromString(raw); err != nil {
-		return "", fmt.Errorf("❌ etree failed to parse input XML: %w", err)
-	}
-
-	for _, geo := range doc.FindElements("//mxGeometry") {
-		required := []string{"x", "y", "width", "height", "as"}
-		defaults := map[string]string{
-			"x":      "0",
-			"y":      "0",
-			"width":  "100",
-			"height": "50",
-			"as":     "geometry",
-		}
-		for _, key := range required {
-			if geo.SelectAttr(key) == nil {
-				geo.CreateAttr(key, defaults[key])
-			}
-		}
-	}
-
-	// etree automatically adds proper quoting and formatting
-	return doc.WriteToString()
-}
-
 func CheckLayout(raw string) error {
 	if strings.TrimSpace(raw) == "" {
 		return errors.New("❌ layout check aborted: input XML is empty or blank")
 	}
 
-	sanitized, err := trySanitize(raw)
+	sanitized, err := shared.SanitizeXML(raw)
 	if err != nil {
 		return fmt.Errorf("❌ failed sanitizing XML: %w", err)
 	}
@@ -153,46 +127,5 @@ func checkVerticalFlow(cells []mxCell) error {
 	}
 
 	debugLog("✅ Top-down flow validated: %d elements in order\n", len(cells))
-	return nil
-}
-
-// ──────────────────────────────────────────────
-// 🧭 RULE 3: Semantic Zone Conformance
-// ──────────────────────────────────────────────
-
-func checkSemanticZones(cells []mxCell) error {
-	if len(cells) == 0 {
-		return nil
-	}
-
-	var maxY float64
-	for _, c := range cells {
-		yBottom := c.Geometry.Y + c.Geometry.Height
-		if yBottom > maxY {
-			maxY = yBottom
-		}
-	}
-
-	for _, c := range cells {
-		yMid := c.Geometry.Y + c.Geometry.Height/2
-		id := strings.ToLower(c.ID)
-
-		switch {
-		case strings.Contains(id, "nav"):
-			if yMid > 0.1*maxY {
-				return fmt.Errorf("🧭 navbar (%s) should be near the top", c.ID)
-			}
-		case strings.Contains(id, "modal"):
-			if yMid < 0.3*maxY || yMid > 0.7*maxY {
-				return fmt.Errorf("🧭 modal (%s) should be centered", c.ID)
-			}
-		case strings.Contains(id, "foot"):
-			if yMid < 0.9*maxY {
-				return fmt.Errorf("🧭 footer (%s) should be at the bottom", c.ID)
-			}
-		}
-	}
-
-	debugLog("✅ Semantic zone checks passed")
 	return nil
 }

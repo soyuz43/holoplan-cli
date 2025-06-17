@@ -29,7 +29,7 @@ Structural Requirements:
 - All attribute values in XML must be enclosed in double quotes
 
 Layout Notes:
-- Begin layout at y="100" and use consistent vertical spacing (e.g., 60px increments)
+- Begin layout at y="100" and use consistent vertical spacing
 - Place nav bars or headers above the components if applicable
 - Use logical spatial positioning without overlaps
 - You may use styling attributes like:
@@ -45,4 +45,5 @@ Compliance Checklist:
 ✅ Each <mxCell> has one <mxGeometry>  
 ✅ Output contains XML only — no text, logs, or comments  
 
-Any violation of these rules will result in invalid output that cannot be parsed or rendered.
+!! Ensure that each component is placed far enough vertically so its full height does not overlap with the next. Use y = previous_y + previous_height + margin.
+!! Any violation of these rules will result in invalid output that cannot be parsed or rendered.

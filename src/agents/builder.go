@@ -27,7 +27,7 @@ func Build(view types.ViewLayout) string {
 	prompt = strings.ReplaceAll(prompt, "{{components}}", strings.Join(view.Components, ", "))
 
 	// 🔍 Print the final prompt before sending it to the LLM
-	// fmt.Printf("📤 Prompt for view '%s':\n%s\n", view.Name, prompt)
+	// fmt.Printf("📤 DEBUG Prompt for view '%s':\n%s\n", view.Name, prompt)
 
 	response, err := callOllamaForLayout(prompt)
 	if err != nil {
@@ -35,7 +35,7 @@ func Build(view types.ViewLayout) string {
 		return ""
 	}
 
-	fmt.Printf("🧪 Raw LLM response for '%s':\n%s\n", view.Name, response)
+	// fmt.Printf("🧪 DEBUG: Raw LLM response for '%s':\n%s\n", view.Name, response)
 
 	if strings.TrimSpace(response) == "" {
 		fmt.Printf("⚠️ Empty response from LLM for view '%s'. Skipping.\n", view.Name)
@@ -54,7 +54,7 @@ func Build(view types.ViewLayout) string {
 // callOllamaForLayout streams a completion from Ollama and returns the full text.
 func callOllamaForLayout(prompt string) (string, error) {
 	body := map[string]interface{}{
-		"model":  "qwen2.5-coder:7b-instruct-q6_K", // or "qwen3:latest"
+		"model":  "qwen2.5-coder:14b",
 		"prompt": prompt,
 		"stream": true,
 	}
