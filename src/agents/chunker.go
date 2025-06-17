@@ -13,23 +13,40 @@ import (
 
 const ollamaURL = "http://localhost:11434/api/chat"
 
-// Remove <think>...</think> and extract JSON block only
+// Remove <think> tags and clean up LLM output
 func extractCleanJSON(raw string) string {
-	// Remove all <think>...</think> blocks
+	// 1. Remove all <think>...</think> blocks
 	reThink := regexp.MustCompile(`(?s)<think>.*?</think>`)
 	cleaned := reThink.ReplaceAllString(raw, "")
 
-	// Trim whitespace
+	// 2. Trim surrounding whitespace
 	cleaned = strings.TrimSpace(cleaned)
 
-	// Try to extract first valid JSON block
+	// 3. Extract first valid JSON object (naively)
 	start := strings.Index(cleaned, "{")
 	end := strings.LastIndex(cleaned, "}")
 	if start == -1 || end == -1 || start > end {
-		return cleaned // fallback: return raw
+		return cleaned // fallback to raw
 	}
+	jsonChunk := cleaned[start : end+1]
 
-	return cleaned[start : end+1]
+	// 4. Escape any literal newlines inside string fields
+	// This is necessary because LLMs often insert `\n` directly, which breaks JSON
+	jsonChunk = escapeLineBreaks(jsonChunk)
+
+	return jsonChunk
+}
+
+// Naively escape unescaped newlines within double-quoted values
+func escapeLineBreaks(input string) string {
+	re := regexp.MustCompile(`"([^"\\]*(?:\\.[^"\\]*)*)"`)
+
+	return re.ReplaceAllStringFunc(input, func(match string) string {
+		// Match is a quoted string, e.g. `"some\nvalue"`
+		unescaped := match[1 : len(match)-1] // remove quotes
+		escaped := strings.ReplaceAll(unescaped, "\n", `\n`)
+		return `"` + escaped + `"`
+	})
 }
 
 func Chunk(story types.UserStory) types.ViewPlan {
@@ -63,7 +80,7 @@ func Chunk(story types.UserStory) types.ViewPlan {
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		panic(fmt.Errorf("failed to read response: %w", err))
+		panic(fmt.Errorf("failed to read response body: %w", err))
 	}
 
 	var parsed struct {
@@ -73,7 +90,7 @@ func Chunk(story types.UserStory) types.ViewPlan {
 	}
 	err = json.Unmarshal(body, &parsed)
 	if err != nil {
-		panic(fmt.Errorf("failed to unmarshal Ollama response: %w", err))
+		panic(fmt.Errorf("failed to unmarshal Ollama API response: %w", err))
 	}
 
 	cleaned := extractCleanJSON(parsed.Message.Content)
@@ -81,8 +98,11 @@ func Chunk(story types.UserStory) types.ViewPlan {
 	var plan types.ViewPlan
 	err = json.Unmarshal([]byte(cleaned), &plan)
 	if err != nil {
-		fmt.Println("🛑 Could not parse LLM output:")
+		fmt.Println("🛑 Failed to parse cleaned JSON:")
+		fmt.Println("──── Original Output ────")
 		fmt.Println(parsed.Message.Content)
+		fmt.Println("──── Extracted JSON ────")
+		fmt.Println(cleaned)
 		panic(fmt.Errorf("JSON parse error: %w", err))
 	}
 
