@@ -1,0 +1,14 @@
+You are a senior UI architect. Output a valid Draw.io layout for the following view.
+
+View Name: {{view_name}}
+View Type: {{view_type}}
+Components: {{components}}
+
+Instructions:
+- Output must be ONLY Draw.io XML.
+- Do not include markdown, explanation, or code comments.
+- Begin output with <mxGraphModel> and include a <root> with nested <mxCell> elements.
+- Each component should be represented as a rectangle, clearly labeled.
+- Position components logically on a 2D plane.
+
+Your output will be parsed and validated automatically. Any extra text will cause a failure.

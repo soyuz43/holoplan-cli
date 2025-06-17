@@ -1,3 +1,4 @@
+// src/agents/chunker.go
 package agents
 
 import (
@@ -31,7 +32,6 @@ func extractCleanJSON(raw string) string {
 	jsonChunk := cleaned[start : end+1]
 
 	// 4. Escape any literal newlines inside string fields
-	// This is necessary because LLMs often insert `\n` directly, which breaks JSON
 	jsonChunk = escapeLineBreaks(jsonChunk)
 
 	return jsonChunk
@@ -42,16 +42,16 @@ func escapeLineBreaks(input string) string {
 	re := regexp.MustCompile(`"([^"\\]*(?:\\.[^"\\]*)*)"`)
 
 	return re.ReplaceAllStringFunc(input, func(match string) string {
-		// Match is a quoted string, e.g. `"some\nvalue"`
 		unescaped := match[1 : len(match)-1] // remove quotes
 		escaped := strings.ReplaceAll(unescaped, "\n", `\n`)
 		return `"` + escaped + `"`
 	})
 }
 
+// Chunk takes a UserStory and extracts views using the LLM.
 func Chunk(story types.UserStory) types.ViewPlan {
 	payload := map[string]interface{}{
-		"model":       "huihui_ai/Hermes-3-Llama-3.2-abliterated:3b-q8_0",
+		"model":       "qwen3:latest",
 		"stream":      false,
 		"temperature": 0,
 		"seed":        42,
@@ -93,6 +93,8 @@ func Chunk(story types.UserStory) types.ViewPlan {
 		panic(fmt.Errorf("failed to unmarshal Ollama API response: %w", err))
 	}
 
+	fmt.Printf("🧩 Raw LLM response for story '%s':\n%s\n", story.ID, parsed.Message.Content)
+
 	cleaned := extractCleanJSON(parsed.Message.Content)
 
 	var plan types.ViewPlan
@@ -107,5 +109,11 @@ func Chunk(story types.UserStory) types.ViewPlan {
 	}
 
 	plan.StoryID = story.ID
+
+	// Additional debug logging for each extracted view
+	for _, v := range plan.Views {
+		fmt.Printf("✅ Extracted view: %s (%s)\n", v.Name, v.Type)
+	}
+
 	return plan
 }

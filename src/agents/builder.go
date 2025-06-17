@@ -1,3 +1,4 @@
+// src/agents/builder.go
 package agents
 
 import (
@@ -25,11 +26,16 @@ func Build(view types.ViewLayout) string {
 	prompt = strings.ReplaceAll(prompt, "{{view_type}}", view.Type)
 	prompt = strings.ReplaceAll(prompt, "{{components}}", strings.Join(view.Components, ", "))
 
+	// 🔍 Print the final prompt before sending it to the LLM
+	fmt.Printf("📤 Prompt for view '%s':\n%s\n", view.Name, prompt)
+
 	response, err := callOllamaForLayout(prompt)
 	if err != nil {
 		fmt.Printf("⚠️ Builder LLM call failed for view '%s': %v\n", view.Name, err)
 		return ""
 	}
+
+	fmt.Printf("🧪 Raw LLM response for '%s':\n%s\n", view.Name, response)
 
 	if strings.TrimSpace(response) == "" {
 		fmt.Printf("⚠️ Empty response from LLM for view '%s'. Skipping.\n", view.Name)
@@ -45,13 +51,13 @@ func Build(view types.ViewLayout) string {
 	return xml
 }
 
-// callOllamaForLayout sends the layout prompt to Ollama Hermes model and returns the raw response text.
+// callOllamaForLayout streams a completion from Ollama and returns the full text.
 func callOllamaForLayout(prompt string) (string, error) {
-	body := map[string]string{
-		"model":  "huihui_ai/Hermes-3-Llama-3.2-abliterated:3b-q8_0",
+	body := map[string]interface{}{
+		"model":  "qwen:7b", // or "qwen3:latest"
 		"prompt": prompt,
+		"stream": true,
 	}
-
 	b, err := json.Marshal(body)
 	if err != nil {
 		return "", fmt.Errorf("failed to marshal request: %w", err)
@@ -63,14 +69,22 @@ func callOllamaForLayout(prompt string) (string, error) {
 	}
 	defer resp.Body.Close()
 
-	var output struct {
-		Response string `json:"response"`
+	var fullResponse strings.Builder
+	decoder := json.NewDecoder(resp.Body)
+
+	for {
+		var chunk struct {
+			Response string `json:"response"`
+			Done     bool   `json:"done"`
+		}
+		if err := decoder.Decode(&chunk); err != nil {
+			break // EOF or malformed
+		}
+		fullResponse.WriteString(chunk.Response)
+		if chunk.Done {
+			break
+		}
 	}
 
-	err = json.NewDecoder(resp.Body).Decode(&output)
-	if err != nil {
-		return "", fmt.Errorf("failed to decode Ollama response: %w", err)
-	}
-
-	return output.Response, nil
+	return fullResponse.String(), nil
 }
