@@ -8,9 +8,9 @@ import (
 	"path/filepath"
 	"strings"
 
-	"holoplan-cli/src/agents" // LLM agents (Chunker, Builder, etc)
+	"holoplan-cli/src/agents"
 	"holoplan-cli/src/types"
-	"holoplan-cli/src/validator" // Go-based spatial checks
+	"holoplan-cli/src/validator"
 
 	"gopkg.in/yaml.v3"
 )
@@ -29,7 +29,6 @@ func LoadStories(path string) ([]types.UserStory, error) {
 const MaxCorrections = 3
 
 func main() {
-	// 1. Load user stories (to be implemented)
 	storyPath := flag.String("stories", "", "Path to user stories YAML")
 	flag.Parse()
 
@@ -38,42 +37,61 @@ func main() {
 	}
 
 	stories, err := LoadStories(*storyPath)
-
 	if err != nil {
 		log.Fatalf("Error loading stories: %v", err)
 	}
 
-	// 2. Process each user story
 	for _, story := range stories {
 		fmt.Printf("🔍 Processing Story: %s\n", story.ID)
 
-		// LLM Agent 1: StoryChunker
-		viewPlan := agents.Chunk(story)
+		// LLM Agent 1: StoryChunker (safe)
+		viewPlan, ok := safeChunk(story)
+		if !ok {
+			log.Printf("⚠️ Failed to chunk story: %s — skipping\n", story.ID)
+			continue
+		}
 
-		// Generate + audit each view in the plan
 		for _, view := range viewPlan.Views {
 			fmt.Printf("⚙️  Generating view: %s\n", view.Name)
 
-			xml := agents.Build(view)            // Builder
-			critique := agents.Audit(story, xml) // Auditor
+			// Builder (safe)
+			xml, ok := safeBuild(view)
+			if !ok {
+				log.Printf("⚠️ Failed to build layout for view: %s\n", view.Name)
+				continue
+			}
 
-			// 3. Retry up to N times if audit fails
+			// Auditor (safe)
+			critique, ok := safeAudit(story, xml)
+			if !ok {
+				log.Printf("⚠️ Failed to audit layout for view: %s\n", view.Name)
+				continue
+			}
+
+			// Retry corrections
 			attempt := 0
 			for critique.HasIssues() && attempt < MaxCorrections {
 				fmt.Printf("🔁 Correction attempt %d for %s\n", attempt+1, view.Name)
-				xml = agents.Resolve(xml, critique)
-				critique = agents.Audit(story, xml)
+
+				xml, ok = safeResolve(xml, critique)
+				if !ok {
+					log.Printf("⚠️ Resolve failed at attempt %d — aborting view\n", attempt+1)
+					break
+				}
+				critique, ok = safeAudit(story, xml)
+				if !ok {
+					log.Printf("⚠️ Audit failed during retry — aborting view\n")
+					break
+				}
 				attempt++
 			}
 
-			// 4. Validate layout geometry with Go
 			if err := validator.CheckLayout(xml); err != nil {
 				log.Printf("❌ Layout validation failed: %v", err)
 			} else {
 				fmt.Println("✅ Spatial layout passed")
 			}
 
-			// 5. Write per-view XML + audit report (to be implemented)
 			err = SaveOutput(view.Name, xml, critique)
 			if err != nil {
 				log.Printf("⚠️ Failed to save output: %v", err)
@@ -81,25 +99,48 @@ func main() {
 		}
 	}
 
-	// 6. Merge all XMLs into final file (to be implemented)
 	err = MergeDrawio("output/final.drawio.xml")
 	if err != nil {
 		log.Fatalf("Merge failed: %v", err)
 	}
 }
+
+func safeChunk(story types.UserStory) (types.ViewPlan, bool) {
+	defer recoverLLM("Chunk")
+	return agents.Chunk(story), true
+}
+
+func safeBuild(view types.ViewLayout) (string, bool) {
+	defer recoverLLM("Build")
+	return agents.Build(view), true
+}
+
+func safeAudit(story types.UserStory, xml string) (types.Critique, bool) {
+	defer recoverLLM("Audit")
+	return agents.Audit(story, xml), true
+}
+
+func safeResolve(xml string, critique types.Critique) (string, bool) {
+	defer recoverLLM("Resolve")
+	return agents.Resolve(xml, critique), true
+}
+
+func recoverLLM(agent string) {
+	if r := recover(); r != nil {
+		log.Printf("🔥 Panic recovered in %s agent: %v\n", agent, r)
+	}
+}
+
 func SaveOutput(viewName string, xml string, critique types.Critique) error {
-	// Ensure output directory exists
 	if err := os.MkdirAll("output", os.ModePerm); err != nil {
 		return fmt.Errorf("failed to create output directory: %w", err)
 	}
 
-	// 1. Save XML
 	xmlPath := filepath.Join("output", viewName+".drawio.xml")
 	if err := os.WriteFile(xmlPath, []byte(xml), 0644); err != nil {
 		return fmt.Errorf("failed to write XML: %w", err)
 	}
 
-	// 2. Save critique if any
 	if critique.HasIssues() {
 		report := "Critique Issues:\n"
 		for _, issue := range critique.Issues {
@@ -121,28 +162,23 @@ func MergeDrawio(outputPath string) error {
 	}
 
 	var allCells []string
-
 	for _, file := range files {
 		content, err := os.ReadFile(file)
 		if err != nil {
 			return fmt.Errorf("failed to read %s: %w", file, err)
 		}
 
-		// Extract <mxCell> blocks from each XML
 		start := strings.Index(string(content), "<mxCell")
 		end := strings.LastIndex(string(content), "</root>")
 		if start == -1 || end == -1 {
 			continue
 		}
 
-		// Extract all cell elements (naive)
 		inner := string(content[start:end])
 		allCells = append(allCells, inner)
 	}
 
-	// Wrap in outer structure
+	// Write Final Output
 	final := fmt.Sprintf(`<mxGraphModel><root>%s</root></mxGraphModel>`, strings.Join(allCells, "\n"))
-
-	// Write final output
 	return os.WriteFile(outputPath, []byte(final), 0644)
 }
