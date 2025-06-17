@@ -7,12 +7,14 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 
 	"holoplan-cli/src/agents"
 	"holoplan-cli/src/types"
 	"holoplan-cli/src/validator"
 
+	"github.com/beevik/etree"
 	"gopkg.in/yaml.v3"
 )
 
@@ -163,20 +165,55 @@ func MergeDrawio(outputPath string) error {
 	}
 
 	var allCells []string
-	for _, file := range files {
+	for i, file := range files {
+		offset := (i + 1) * 100 // Each file gets a unique ID range
+
 		content, err := os.ReadFile(file)
 		if err != nil {
 			return fmt.Errorf("failed to read %s: %w", file, err)
 		}
 
-		start := strings.Index(string(content), "<mxCell")
-		end := strings.LastIndex(string(content), "</root>")
-		if start == -1 || end == -1 {
-			continue
+		// Use etree to parse and re-ID
+		doc := etree.NewDocument()
+		if err := doc.ReadFromString(string(content)); err != nil {
+			return fmt.Errorf("failed to parse XML in %s: %w", file, err)
 		}
 
-		inner := string(content[start:end])
-		allCells = append(allCells, inner)
+		for _, cell := range doc.FindElements("//mxCell") {
+			if idAttr := cell.SelectAttr("id"); idAttr != nil {
+				if idInt, err := strconv.Atoi(idAttr.Value); err == nil {
+					idAttr.Value = strconv.Itoa(idInt + offset)
+				}
+			}
+			if parentAttr := cell.SelectAttr("parent"); parentAttr != nil {
+				if parentInt, err := strconv.Atoi(parentAttr.Value); err == nil {
+					parentAttr.Value = strconv.Itoa(parentInt + offset)
+				}
+			}
+		}
+
+		root := doc.FindElement("//root")
+		for _, cell := range root.ChildElements() {
+			// Create a temporary document to serialize the element
+			tempDoc := etree.NewDocument()
+			tempDoc.SetRoot(cell.Copy())
+
+			// Use WriteToString on the document
+			cellXML, err := tempDoc.WriteToString()
+			if err != nil {
+				return fmt.Errorf("failed to serialize mxCell: %w", err)
+			}
+
+			// Extract just the element content (remove XML declaration)
+			lines := strings.Split(cellXML, "\n")
+			for _, line := range lines {
+				line = strings.TrimSpace(line)
+				if line != "" && !strings.HasPrefix(line, "<?xml") {
+					allCells = append(allCells, line)
+					break
+				}
+			}
+		}
 	}
 
 	// Write Final Output

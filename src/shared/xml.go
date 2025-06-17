@@ -4,6 +4,7 @@ package shared
 import (
 	"fmt"
 	"regexp"
+	"strconv"
 	"strings"
 
 	"github.com/beevik/etree"
@@ -60,6 +61,31 @@ func SanitizeXML(raw string) (string, error) {
 			if geo.SelectAttr(key) == nil {
 				geo.CreateAttr(key, defaults[key])
 				fmt.Printf("🧪 Filled missing '%s' with default '%s'\n", key, defaults[key])
+			}
+		}
+	}
+
+	return doc.WriteToString()
+}
+
+// OffsetCellIDs modifies all mxCell id and parent attributes to avoid collisions.
+// Each layout gets a unique offset like 100, 200, etc.
+func OffsetCellIDs(raw string, offset int) (string, error) {
+	doc := etree.NewDocument()
+	if err := doc.ReadFromString(raw); err != nil {
+		return "", fmt.Errorf("failed to parse XML for ID offsetting: %w", err)
+	}
+
+	// Remap all ids
+	for _, cell := range doc.FindElements("//mxCell") {
+		if idAttr := cell.SelectAttr("id"); idAttr != nil {
+			if idInt, err := strconv.Atoi(idAttr.Value); err == nil {
+				idAttr.Value = strconv.Itoa(idInt + offset)
+			}
+		}
+		if parentAttr := cell.SelectAttr("parent"); parentAttr != nil {
+			if parentInt, err := strconv.Atoi(parentAttr.Value); err == nil {
+				parentAttr.Value = strconv.Itoa(parentInt + offset)
 			}
 		}
 	}
