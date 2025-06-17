@@ -51,14 +51,23 @@ func escapeLineBreaks(input string) string {
 // Chunk takes a UserStory and extracts views using the LLM.
 func Chunk(story types.UserStory) types.ViewPlan {
 	payload := map[string]interface{}{
-		"model":       "qwen3:latest",
+		"model":       "llama3.2:3b",
 		"stream":      false,
 		"temperature": 0,
 		"seed":        42,
 		"messages": []map[string]string{
 			{
-				"role":    "system",
-				"content": "You are the StoryChunker. Given a user story, return a JSON object with:\n- views: array of {name, type}\n- reasoning: a short explanation of how you decided on the views.\nOnly respond with a JSON object.",
+				"role": "system",
+				"content": `You are the StoryChunker.
+
+				Given a user story, return a JSON object with:
+
+				- views: array of {name, type, components}
+				- reasoning: short explanation of how you decided on the views
+
+			Each view should include a reasonable set of UI components based on the story. Components should be descriptive nouns or short phrases like "Dog Image", "Breed", "Age", "Adopt Button".
+
+			Respond ONLY with a JSON object. Do not include explanations, markdown, or extra formatting.`,
 			},
 			{
 				"role":    "user",
@@ -93,14 +102,16 @@ func Chunk(story types.UserStory) types.ViewPlan {
 		panic(fmt.Errorf("failed to unmarshal Ollama API response: %w", err))
 	}
 
-	fmt.Printf("🧩 Raw LLM response for story '%s':\n%s\n", story.ID, parsed.Message.Content)
-
 	cleaned := extractCleanJSON(parsed.Message.Content)
+
+	// Debug Line: print the extracted JSON from the chunker
+	// fmt.Println("\n🔎 DEBUG: Cleaned JSON extracted from LLM response:")
+	fmt.Println(cleaned)
 
 	var plan types.ViewPlan
 	err = json.Unmarshal([]byte(cleaned), &plan)
 	if err != nil {
-		fmt.Println("🛑 Failed to parse cleaned JSON:")
+		fmt.Println("\n🛑 Failed to parse cleaned JSON:")
 		fmt.Println("──── Original Output ────")
 		fmt.Println(parsed.Message.Content)
 		fmt.Println("──── Extracted JSON ────")
@@ -110,7 +121,6 @@ func Chunk(story types.UserStory) types.ViewPlan {
 
 	plan.StoryID = story.ID
 
-	// Additional debug logging for each extracted view
 	for _, v := range plan.Views {
 		fmt.Printf("✅ Extracted view: %s (%s)\n", v.Name, v.Type)
 	}

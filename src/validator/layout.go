@@ -1,3 +1,4 @@
+// src/validator/layout.go
 package validator
 
 import (
@@ -6,6 +7,8 @@ import (
 	"fmt"
 	"sort"
 	"strings"
+
+	"github.com/beevik/etree"
 )
 
 var Debug = false
@@ -34,24 +37,48 @@ type mxGraphModel struct {
 	Cells []mxCell `xml:"root>mxCell"`
 }
 
-func CheckLayout(xmlInput string) error {
-	// Early guard for blank input
-	if strings.TrimSpace(xmlInput) == "" {
+func trySanitize(raw string) (string, error) {
+	doc := etree.NewDocument()
+	if err := doc.ReadFromString(raw); err != nil {
+		return "", fmt.Errorf("❌ etree failed to parse input XML: %w", err)
+	}
+
+	for _, geo := range doc.FindElements("//mxGeometry") {
+		required := []string{"x", "y", "width", "height", "as"}
+		defaults := map[string]string{
+			"x":      "0",
+			"y":      "0",
+			"width":  "100",
+			"height": "50",
+			"as":     "geometry",
+		}
+		for _, key := range required {
+			if geo.SelectAttr(key) == nil {
+				geo.CreateAttr(key, defaults[key])
+			}
+		}
+	}
+
+	// etree automatically adds proper quoting and formatting
+	return doc.WriteToString()
+}
+
+func CheckLayout(raw string) error {
+	if strings.TrimSpace(raw) == "" {
 		return errors.New("❌ layout check aborted: input XML is empty or blank")
 	}
 
-	var model mxGraphModel
-	decoder := xml.NewDecoder(strings.NewReader(xmlInput))
-	err := decoder.Decode(&model)
+	sanitized, err := trySanitize(raw)
 	if err != nil {
-		// Provide better hint if input was blank/malformed
-		if strings.Contains(err.Error(), "EOF") {
-			return fmt.Errorf("❌ XML parsing failed: input was empty or incomplete (EOF)")
-		}
-		return fmt.Errorf("❌ XML parsing failed: %w", err)
+		return fmt.Errorf("❌ failed sanitizing XML: %w", err)
 	}
 
-	// Filter for visible/vertex elements only
+	var model mxGraphModel
+	decoder := xml.NewDecoder(strings.NewReader(sanitized))
+	if err := decoder.Decode(&model); err != nil {
+		return fmt.Errorf("❌ XML parsing failed after sanitize: %w", err)
+	}
+
 	var renderables []mxCell
 	for _, cell := range model.Cells {
 		if cell.Vertex == "1" {

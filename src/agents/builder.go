@@ -27,7 +27,7 @@ func Build(view types.ViewLayout) string {
 	prompt = strings.ReplaceAll(prompt, "{{components}}", strings.Join(view.Components, ", "))
 
 	// 🔍 Print the final prompt before sending it to the LLM
-	fmt.Printf("📤 Prompt for view '%s':\n%s\n", view.Name, prompt)
+	// fmt.Printf("📤 Prompt for view '%s':\n%s\n", view.Name, prompt)
 
 	response, err := callOllamaForLayout(prompt)
 	if err != nil {
@@ -54,7 +54,7 @@ func Build(view types.ViewLayout) string {
 // callOllamaForLayout streams a completion from Ollama and returns the full text.
 func callOllamaForLayout(prompt string) (string, error) {
 	body := map[string]interface{}{
-		"model":  "qwen:7b", // or "qwen3:latest"
+		"model":  "qwen2.5-coder:14b-instruct-q5_K_M", // or "qwen3:latest"
 		"prompt": prompt,
 		"stream": true,
 	}
@@ -78,8 +78,10 @@ func callOllamaForLayout(prompt string) (string, error) {
 			Done     bool   `json:"done"`
 		}
 		if err := decoder.Decode(&chunk); err != nil {
-			break // EOF or malformed
+			fmt.Printf("🛑 Streaming decode failed: %v\n", err)
+			break
 		}
+
 		fullResponse.WriteString(chunk.Response)
 		if chunk.Done {
 			break
