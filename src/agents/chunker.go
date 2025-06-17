@@ -51,7 +51,7 @@ func escapeLineBreaks(input string) string {
 // Chunk takes a UserStory and extracts views using the LLM.
 func Chunk(story types.UserStory) types.ViewPlan {
 	payload := map[string]interface{}{
-		"model":       "llama3.2:3b",
+		"model":       "qwen2.5-coder:7b-instruct-q6_K",
 		"stream":      false,
 		"temperature": 0,
 		"seed":        42,
