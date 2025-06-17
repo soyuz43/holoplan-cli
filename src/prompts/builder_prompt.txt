@@ -35,8 +35,9 @@ Layout Notes:
 - You may use styling attributes like:
   - rounded=1
   - whiteSpace=wrap
-  - fillColor="#f5f5f5" for neutral containers
-  - fillColor="#aed581" for buttons or CTAs
+  - fillColor=#f5f5f5 for neutral containers
+  - fillColor=#aed581 for buttons or CTAs
+_Do NOT wrap color values in quotes or escape them. For example: Use fillColor=#f5f5f5, not fillColor=&quot;#f5f5f5&quot;._
 
 Compliance Checklist:
 ✅ All XML must be well-formed  
@@ -45,5 +46,6 @@ Compliance Checklist:
 ✅ Each <mxCell> has one <mxGeometry>  
 ✅ Output contains XML only — no text, logs, or comments  
 
+!! Do NOT escape color values or quote them. Use: fillColor=#xxxxxx not fillColor=&quot;#xxxxxx&quot;
 !! Ensure that each component is placed far enough vertically so its full height does not overlap with the next. Use y = previous_y + previous_height + margin.
 !! Any violation of these rules will result in invalid output that cannot be parsed or rendered.

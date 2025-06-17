@@ -92,3 +92,24 @@ func OffsetCellIDs(raw string, offset int) (string, error) {
 
 	return doc.WriteToString()
 }
+
+// DetectEscapedFillColors scans XML and reports all fillColor attributes that are improperly escaped.
+func DetectEscapedFillColors(raw string) ([]string, error) {
+	doc := etree.NewDocument()
+	if err := doc.ReadFromString(raw); err != nil {
+		return nil, fmt.Errorf("failed to parse XML for fillColor check: %w", err)
+	}
+
+	var offenders []string
+	pattern := regexp.MustCompile(`fillColor=&quot;#[0-9a-fA-F]{6}&quot;`)
+
+	for _, cell := range doc.FindElements("//mxCell") {
+		if styleAttr := cell.SelectAttr("style"); styleAttr != nil {
+			if pattern.MatchString(styleAttr.Value) {
+				offenders = append(offenders, styleAttr.Value)
+			}
+		}
+	}
+
+	return offenders, nil
+}

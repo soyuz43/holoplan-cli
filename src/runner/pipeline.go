@@ -6,9 +6,9 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
-	"strings"
 
 	"holoplan-cli/src/agents"
+	"holoplan-cli/src/shared"
 	"holoplan-cli/src/types"
 	"holoplan-cli/src/validator"
 
@@ -146,13 +146,14 @@ func saveOutput(viewName string, xml string, critique types.Critique) error {
 	return nil
 }
 
+// mergeDrawio combines all *.drawio files from the output directory into one valid mxGraphModel XML.
 func mergeDrawio(outputPath string) error {
 	files, err := filepath.Glob("output/*.drawio")
 	if err != nil {
 		return fmt.Errorf("failed to scan output files: %w", err)
 	}
 
-	var allCells []string
+	var allCells []etree.Element
 	for i, file := range files {
 		offset := (i + 1) * 100
 
@@ -166,6 +167,16 @@ func mergeDrawio(outputPath string) error {
 			return fmt.Errorf("failed to parse XML in %s: %w", file, err)
 		}
 
+		// Check for escaped fillColor issues
+		offenders, err := shared.DetectEscapedFillColors(string(content))
+		if err != nil {
+			return fmt.Errorf("[x] Error detecting escaped colors in %s: %w", file, err)
+		}
+		if len(offenders) > 0 {
+			return fmt.Errorf("[x] Escaped fillColor values detected in %s: %v", file, offenders)
+		}
+
+		// Offset IDs to avoid collisions
 		for _, cell := range doc.FindElements("//mxCell") {
 			if idAttr := cell.SelectAttr("id"); idAttr != nil {
 				if idInt, err := strconv.Atoi(idAttr.Value); err == nil {
@@ -177,29 +188,39 @@ func mergeDrawio(outputPath string) error {
 					parentAttr.Value = strconv.Itoa(parentInt + offset)
 				}
 			}
+
+			// Ensure valid mxCell structure
+			if len(cell.ChildElements()) == 0 {
+				cell.SetText("") // makes etree serialize as self-closing
+			}
 		}
 
+		// Collect <mxCell> elements from <root>
 		root := doc.FindElement("//root")
 		for _, cell := range root.ChildElements() {
-			tempDoc := etree.NewDocument()
-			tempDoc.SetRoot(cell.Copy())
-
-			cellXML, err := tempDoc.WriteToString()
-			if err != nil {
-				return fmt.Errorf("failed to serialize mxCell: %w", err)
-			}
-
-			lines := strings.Split(cellXML, "\n")
-			for _, line := range lines {
-				line = strings.TrimSpace(line)
-				if line != "" && !strings.HasPrefix(line, "<?xml") {
-					allCells = append(allCells, line)
-					break
-				}
-			}
+			allCells = append(allCells, *cell.Copy())
 		}
 	}
 
-	final := fmt.Sprintf(`<mxGraphModel><root>%s</root></mxGraphModel>`, strings.Join(allCells, "\n"))
-	return os.WriteFile(outputPath, []byte(final), 0644)
+	// Construct final document
+	finalDoc := etree.NewDocument()
+	finalDoc.CreateProcInst("xml", `version="1.0" encoding="UTF-8"`)
+	graphModel := finalDoc.CreateElement("mxGraphModel")
+	root := graphModel.CreateElement("root")
+	for _, cell := range allCells {
+		root.AddChild(&cell)
+	}
+
+	// Validate final structure before saving
+	finalXML, err := finalDoc.WriteToString()
+	if err != nil {
+		return fmt.Errorf("failed to serialize final merged XML: %w", err)
+	}
+
+	validateDoc := etree.NewDocument()
+	if err := validateDoc.ReadFromString(finalXML); err != nil {
+		return fmt.Errorf("🚨 final merged XML is malformed: %w", err)
+	}
+
+	return os.WriteFile(outputPath, []byte(finalXML), 0644)
 }
