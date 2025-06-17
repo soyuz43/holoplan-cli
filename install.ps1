@@ -1,21 +1,29 @@
-# install.ps1
 $ErrorActionPreference = 'Stop'
 
 $projectPath = Split-Path -Parent $MyInvocation.MyCommand.Path
-$binaryName = "holoplan"
+$binaryName = "holoplan.exe"
 $targetBinDir = "$env:USERPROFILE\bin"
+$targetBinary = Join-Path $targetBinDir $binaryName
 
-# Make sure the target directory exists
-if (!(Test-Path -Path $targetBinDir)) {
+# Ensure target directory exists
+if (-not (Test-Path $targetBinDir)) {
+    Write-Host "📁 Creating bin directory at $targetBinDir"
     New-Item -ItemType Directory -Path $targetBinDir | Out-Null
 }
 
-# Build from the src folder where main.go lives
-Write-Host "🚧 Building from: $projectPath\src"
-go build -o "$targetBinDir\$binaryName.exe" "$projectPath\src"
+# Delete old binary if it exists
+if (Test-Path $targetBinary) {
+    Write-Host "🧹 Removing old $binaryName from $targetBinDir"
+    Remove-Item $targetBinary -Force
+}
+
+# Build from src/
+Write-Host "🚧 Building $binaryName from: $projectPath\src"
+go build -o $targetBinary "$projectPath\src"
 
 if ($LASTEXITCODE -eq 0) {
     Write-Host "✅ $binaryName installed to $targetBinDir"
 } else {
-    Write-Host "❌ Build failed"
+    Write-Error "❌ Build failed. Check compilation errors."
+    exit 1
 }
