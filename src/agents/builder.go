@@ -54,7 +54,7 @@ func Build(view types.ViewLayout) string {
 // callOllamaForLayout streams a completion from Ollama and returns the full text.
 func callOllamaForLayout(prompt string) (string, error) {
 	body := map[string]interface{}{
-		"model":  "qwen2.5-coder:14b-instruct-q5_K_M", // or "qwen3:latest"
+		"model":  "qwen2.5-coder:7b-instruct-q6_K", // or "qwen3:latest"
 		"prompt": prompt,
 		"stream": true,
 	}
