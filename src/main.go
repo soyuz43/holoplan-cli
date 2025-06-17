@@ -1,3 +1,4 @@
+// src\main.go
 package main
 
 import (
@@ -99,7 +100,7 @@ func main() {
 		}
 	}
 
-	err = MergeDrawio("output/final.drawio.xml")
+	err = MergeDrawio("output/final.drawio")
 	if err != nil {
 		log.Fatalf("Merge failed: %v", err)
 	}
@@ -136,7 +137,7 @@ func SaveOutput(viewName string, xml string, critique types.Critique) error {
 		return fmt.Errorf("failed to create output directory: %w", err)
 	}
 
-	xmlPath := filepath.Join("output", viewName+".drawio.xml")
+	xmlPath := filepath.Join("output", viewName+".drawio")
 	if err := os.WriteFile(xmlPath, []byte(xml), 0644); err != nil {
 		return fmt.Errorf("failed to write XML: %w", err)
 	}
@@ -156,7 +157,7 @@ func SaveOutput(viewName string, xml string, critique types.Critique) error {
 }
 
 func MergeDrawio(outputPath string) error {
-	files, err := filepath.Glob("output/*.drawio.xml")
+	files, err := filepath.Glob("output/*.drawio")
 	if err != nil {
 		return fmt.Errorf("failed to scan output files: %w", err)
 	}
