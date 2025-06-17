@@ -2,8 +2,10 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
 	"os"
+	"strings"
 
 	"holoplan-cli/src/runner"
 
@@ -23,14 +25,22 @@ func main() {
 		Short: "Generate wireframes from a YAML file of user stories",
 		Run: func(cmd *cobra.Command, args []string) {
 			if storiesPath == "" {
-				fmt.Println("❌ Please provide a path to the YAML file using --stories")
-				os.Exit(1)
+				fmt.Print("Please provide a filepath for the user stories.yaml: ")
+				reader := bufio.NewReader(os.Stdin)
+				input, err := reader.ReadString('\n')
+				if err != nil {
+					fmt.Println("[x] Failed to read input:", err)
+					os.Exit(1)
+				}
+				storiesPath = strings.TrimSpace(input)
 			}
+
 			if err := runner.RunPipeline(storiesPath); err != nil {
-				fmt.Printf("🚨 Pipeline failed: %v\n", err)
+				fmt.Println("[x] Pipeline failed:", err)
 				os.Exit(1)
 			}
-			fmt.Println("🎉 All done!")
+
+			fmt.Println("[✓] Pipeline completed successfully")
 		},
 	}
 
@@ -38,7 +48,7 @@ func main() {
 	rootCmd.AddCommand(runCmd)
 
 	if err := rootCmd.Execute(); err != nil {
-		fmt.Println(err)
+		fmt.Println("[x] Command execution failed:", err)
 		os.Exit(1)
 	}
 }
