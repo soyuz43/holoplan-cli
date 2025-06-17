@@ -17,7 +17,7 @@ FILES=("$OUTPUT_DIR"/*.drawio)
 shopt -u nullglob
 
 if [ ${#FILES[@]} -eq 0 ]; then
-  echo "No .drawio.xml files to delete in '$OUTPUT_DIR'."
+  echo "No .drawio files to delete in '$OUTPUT_DIR'."
 else
   rm -f "${FILES[@]}"
   echo "Deleted ${#FILES[@]} file(s) from '$OUTPUT_DIR'."
