@@ -36,16 +36,8 @@ func ExtractXMLFrom(response string) string {
 	return ""
 }
 
-// fixUnquotedAttributes ensures all attribute values are quoted, e.g., width=180 -> width="180"
 func fixUnquotedAttributes(xml string) string {
-	// Match attribute=value where value is not in quotes
-	// This regex captures:
-	// - \s+ : one or more whitespace characters before attribute name
-	// - [a-zA-Z_:]+ : attribute name (letters, underscore, colon)
-	// - = : equals sign
-	// - [^\s"'>]+ : unquoted value (anything except whitespace, quotes, or >)
-	re := regexp.MustCompile(`(\s+[a-zA-Z_:]+)=([^\s"'>]+)`)
-
+	re := regexp.MustCompile(`\b([a-zA-Z_:]+)=([^\s"'>]+)`)
 	return re.ReplaceAllString(xml, `$1="$2"`)
 }
 
