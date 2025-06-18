@@ -102,6 +102,43 @@ sudo mv holoplan-cli /usr/local/bin/holoplan
 holoplan --stories examples/user_stories.yaml
 ```
 
+
+---
+
+## 🚀 Running the Pipeline
+
+Once installed, you can generate UI layouts from a user story file using the `run` command:
+
+```bash
+holoplan run --stories examples/user_stories.yaml
+```
+
+Or use the shorthand flag:
+
+```bash
+holoplan run -s examples/user_stories.yaml
+```
+
+This command will:
+
+1. Load and parse the user stories from the provided YAML file
+2. Chunk each story into UI views using an LLM
+3. Generate a Draw\.io layout for each view
+4. Audit and correct layouts if needed
+5. Validate component positioning and spacing
+6. Save the resulting `.drawio.xml` files into the `output/` directory
+
+### 🔧 Options
+
+| Flag              | Description                           | Required |
+| ----------------- | ------------------------------------- | -------- |
+| `--stories`, `-s` | Path to the YAML file of user stories | ✅ Yes    |
+
+> If the `--stories` flag is omitted, the CLI will prompt you to enter the file path manually.
+
+---
+
+
 ### 📁 Output
 
 * All generated views saved to `./output/`
@@ -163,10 +200,39 @@ Merge all → final.drawio.xml
 
 ---
 
+## 🛠️ Developer Makefile Commands
+
+If you're actively working on Holoplan, use the built-in `Makefile` for common dev tasks:
+
+### 🔄 Regenerate Wireframes
+
+```bash
+make wireframes
+```
+
+Runs the full Holoplan pipeline on `examples/user_stories.yaml`, regenerating all layouts and merged output.
+
+### 🧹 Clear Output Directory
+
+```bash
+make empty
+```
+
+Deletes all `.drawio` and `.drawio.xml` files from the `output/` directory.
+
+### 🏗️ Rebuild & Install CLI
+
+```bash
+make install
+```
+
+Triggers the PowerShell-based installer to rebuild the `holoplan.exe` binary and place it in `C:\Users\<you>\bin`.
+
+
+---
 ## 📄 License
 
-MIT
-
+MIT © [soyuz43](https://github.com/soyuz43)
 
 
 
