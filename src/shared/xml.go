@@ -38,20 +38,20 @@ func ExtractXMLFrom(response string) string {
 
 // fixUnquotedAttributes ensures all attribute values are quoted, e.g., width=180 -> width="180"
 func fixUnquotedAttributes(xml string) string {
-	re := regexp.MustCompile(`([a-zA-Z_:]+)=([^\s>]+)`)
+	fmt.Println("🛠️ Fixing unquoted XML attributes")
 
-	return re.ReplaceAllStringFunc(xml, func(match string) string {
-		parts := strings.SplitN(match, "=", 2)
+	re := regexp.MustCompile(`\b([a-zA-Z_:]+)=([^\s"'/>]+)`)
+	return re.ReplaceAllStringFunc(xml, func(attr string) string {
+		// attr looks like: key=value
+		parts := strings.SplitN(attr, "=", 2)
 		if len(parts) != 2 {
-			return match
+			return attr // malformed, return as-is
 		}
-		attr := parts[0]
-		val := parts[1]
+		key, val := parts[0], parts[1]
 		if strings.HasPrefix(val, `"`) || strings.HasPrefix(val, `'`) {
-			// Already quoted
-			return match
+			return attr // already quoted
 		}
-		return fmt.Sprintf(`%s="%s"`, attr, val)
+		return fmt.Sprintf(`%s="%s"`, key, val)
 	})
 }
 
