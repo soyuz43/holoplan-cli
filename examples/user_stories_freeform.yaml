@@ -1,0 +1,18 @@
+user_stories:
+  - >
+    When a user first opens the app, they should feel like they’re being welcomed —
+    kind of like how Netflix suggests stuff right away. So maybe show them a banner
+    or like a section that gives them a quick idea of what's new, or what they might
+    be interested in. It doesn’t have to be fancy, but it should feel curated.
+
+  - >
+    There needs to be a way for people to submit questions about dog breeds,
+    especially if they're not sure which breed is right for them. This could be
+    a form, or maybe even like a chatbot interface? Also we might want to capture
+    contact info here too just in case we need to follow up.
+
+  - >
+    We want an admin dashboard, but it shouldn’t be overwhelming. Just basic stuff
+    like how many dogs are listed, pending adoptions, maybe some quick stats or a graph.
+    It’d be nice if there was some kind of alert system too, like "3 adoption requests
+    need approval" or whatever. Think lightweight, not Salesforce.
