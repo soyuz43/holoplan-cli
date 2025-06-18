@@ -40,7 +40,7 @@ func ExtractXMLFrom(response string) string {
 // fixUnquotedAttributes ensures all attribute values are quoted, e.g., width=180 -> width="180"
 // But preserves the internal structure of style attributes which contain key=value pairs
 func fixUnquotedAttributes(xml string) string {
-	fmt.Println("🛠️ Fixing unquoted XML attributes")
+	// fmt.Println("🛠️ Fixing unquoted XML attributes")
 
 	// Step 1: Extract and temporarily replace style attributes to protect them
 	styleRe := regexp.MustCompile(`style="[^"]*"`)
@@ -73,7 +73,6 @@ func fixUnquotedAttributes(xml string) string {
 		xml = strings.Replace(xml, placeholder, style, 1)
 	}
 
-	fmt.Printf("🔧 Fixed %d unquoted attribute(s)\n", count)
 	return xml
 }
 
@@ -96,7 +95,7 @@ func escapeInvalidEntities(xml string) string {
 // Also wraps unquoted attribute values and escapes invalid ampersands.
 func SanitizeXML(raw string) (string, error) {
 	raw = ForceQuoteAllAttributes(raw)
-	fmt.Println("🧼 [SanitizeXML] ForceQuoteAllAttributes applied")
+	// fmt.Println("🧼 [SanitizeXML] ForceQuoteAllAttributes applied")
 	raw = fixUnquotedAttributes(raw)
 	raw = fixHalfQuotedAttributes(raw)
 	raw = escapeInvalidEntities(raw)
