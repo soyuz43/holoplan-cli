@@ -52,7 +52,7 @@ func formatList(items []string) string {
 // Sends the correction prompt to Ollama
 func callOllamaForCorrection(prompt string) (string, error) {
 	body := map[string]string{
-		"model":  "huihui_ai/Hermes-3-Llama-3.2-abliterated:3b-q8_0",
+		"model":  "qwen2.5-coder:7b-instruct-q6_K",
 		"prompt": prompt,
 	}
 	b, _ := json.Marshal(body)
