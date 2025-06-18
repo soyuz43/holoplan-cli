@@ -10,7 +10,7 @@
 
 - 📖 **YAML-based User Story Input**
 - 🧠 **LLM-based Story Chunking**
-- 🏗 **Hermes Model Layout Builder**
+- 🏗 **Qwen2.5 Coder Model Layout Builder**
 - 🔍 **Automated UI Critique + Correction Loop**
 - 📏 **Go-based Spatial Validation**
 - 🧾 **Draw.io XML Output + Critique Logs**

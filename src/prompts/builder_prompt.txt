@@ -15,7 +15,7 @@ Instructions:
   - A value attribute equal to the component's label
   - Exactly one <mxGeometry> child with properly quoted attributes:
     Example:
-    <mxCell id="3" value="Submit Button" style="rounded=1;whiteSpace=wrap;fillColor=#aed581 vertex="1" parent="1">
+    <mxCell id="3" value="Submit Button" style="rounded=1;whiteSpace=wrap;fillColor=#aed581" vertex="1" parent="1">
       <mxGeometry x="100" y="200" width="600" height="50" as="geometry"/>
     </mxCell>
 
@@ -48,4 +48,5 @@ Compliance Checklist:
 
 !! Do NOT escape color values or quote them. Use: fillColor=#xxxxxx not fillColor=&quot;#xxxxxx&quot;
 !! Ensure that each component is placed far enough vertically so its full height does not overlap with the next. Use y = previous_y + previous_height + margin.
-!! Any violation of these rules will result in invalid output that cannot be parsed or rendered.
+!! Only output valid XML. All attribute values must be quoted.
+
