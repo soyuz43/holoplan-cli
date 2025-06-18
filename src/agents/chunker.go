@@ -51,7 +51,7 @@ func escapeLineBreaks(input string) string {
 // Chunk takes a UserStory and extracts views using the LLM.
 func Chunk(story types.UserStory) types.ViewPlan {
 	payload := map[string]interface{}{
-		"model":       "llama3.1:8b",
+		"model":       "qwen2.5-coder:3b-instruct-q8_0",
 		"stream":      false,
 		"temperature": 0,
 		"seed":        42,
@@ -106,7 +106,7 @@ func Chunk(story types.UserStory) types.ViewPlan {
 
 	// Debug Line: print the extracted JSON from the chunker
 	// fmt.Println("\n🔎 DEBUG: Cleaned JSON extracted from LLM response:")
-	fmt.Println(cleaned)
+	// fmt.Println(cleaned)
 
 	var plan types.ViewPlan
 	err = json.Unmarshal([]byte(cleaned), &plan)

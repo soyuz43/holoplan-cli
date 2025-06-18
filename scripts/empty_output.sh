@@ -5,7 +5,7 @@ set -euo pipefail
 
 OUTPUT_DIR="output"
 
-echo "Deleting all .drawio files in the '$OUTPUT_DIR' directory..."
+echo "Deleting all .drawio and .drawio.xml files in the '$OUTPUT_DIR' directory..."
 
 if [ ! -d "$OUTPUT_DIR" ]; then
   echo "Directory '$OUTPUT_DIR' does not exist. Nothing to clean."
@@ -13,11 +13,11 @@ if [ ! -d "$OUTPUT_DIR" ]; then
 fi
 
 shopt -s nullglob
-FILES=("$OUTPUT_DIR"/*.drawio)
+FILES=("$OUTPUT_DIR"/*.drawio "$OUTPUT_DIR"/*.drawio.xml)
 shopt -u nullglob
 
 if [ ${#FILES[@]} -eq 0 ]; then
-  echo "No .drawio files to delete in '$OUTPUT_DIR'."
+  echo "No .drawio or .drawio.xml files to delete in '$OUTPUT_DIR'."
 else
   rm -f "${FILES[@]}"
   echo "Deleted ${#FILES[@]} file(s) from '$OUTPUT_DIR'."
