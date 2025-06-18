@@ -65,7 +65,7 @@ func RunPipeline(yamlPath string) error {
 				}
 				attempt++
 			}
-
+			xml = shared.ForceQuoteAllAttributes(xml)
 			if err := validator.CheckLayout(xml); err != nil {
 				log.Printf("❌ Layout validation failed: %v", err)
 			} else {
