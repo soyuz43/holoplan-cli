@@ -7,3 +7,6 @@ wireframes:
 
 empty:
 	./scripts/empty_output.sh
+
+install:
+	pwsh -ExecutionPolicy Bypass -File ./install.ps1

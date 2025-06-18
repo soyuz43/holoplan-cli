@@ -1,3 +1,4 @@
+// src/shared/xml.go
 package shared
 
 import (
@@ -37,22 +38,43 @@ func ExtractXMLFrom(response string) string {
 }
 
 // fixUnquotedAttributes ensures all attribute values are quoted, e.g., width=180 -> width="180"
+// But preserves the internal structure of style attributes which contain key=value pairs
 func fixUnquotedAttributes(xml string) string {
-	re := regexp.MustCompile(`([a-zA-Z_:]+)=([^\s>]+)`)
+	fmt.Println("🛠️ Fixing unquoted XML attributes")
 
-	return re.ReplaceAllStringFunc(xml, func(match string) string {
-		parts := strings.SplitN(match, "=", 2)
+	// Step 1: Extract and temporarily replace style attributes to protect them
+	styleRe := regexp.MustCompile(`style="[^"]*"`)
+	styles := styleRe.FindAllString(xml, -1)
+	placeholder := "@@STYLE_PLACEHOLDER@@"
+
+	// Replace all style attributes with placeholders
+	xml = styleRe.ReplaceAllString(xml, placeholder)
+
+	// Step 2: Apply the original fixing logic to everything else
+	attrRe := regexp.MustCompile(`\b([a-zA-Z_:]+)=([^\s"'=<>` + "`" + `]+)`)
+	count := 0
+
+	xml = attrRe.ReplaceAllStringFunc(xml, func(attr string) string {
+		parts := strings.SplitN(attr, "=", 2)
 		if len(parts) != 2 {
-			return match
+			return attr
 		}
-		attr := parts[0]
-		val := parts[1]
+		key, val := parts[0], parts[1]
+		val = strings.TrimSpace(val)
 		if strings.HasPrefix(val, `"`) || strings.HasPrefix(val, `'`) {
-			// Already quoted
-			return match
+			return attr
 		}
-		return fmt.Sprintf(`%s="%s"`, attr, val)
+		count++
+		return fmt.Sprintf(`%s="%s"`, key, val)
 	})
+
+	// Step 3: Restore the original style attributes
+	for _, style := range styles {
+		xml = strings.Replace(xml, placeholder, style, 1)
+	}
+
+	fmt.Printf("🔧 Fixed %d unquoted attribute(s)\n", count)
+	return xml
 }
 
 // escapeInvalidEntities replaces standalone & with &amp;, excluding valid XML entities
@@ -73,10 +95,15 @@ func escapeInvalidEntities(xml string) string {
 // SanitizeXML ensures all <mxGeometry> elements have required attributes.
 // Also wraps unquoted attribute values and escapes invalid ampersands.
 func SanitizeXML(raw string) (string, error) {
+	raw = ForceQuoteAllAttributes(raw)
+	fmt.Println("🧼 [SanitizeXML] ForceQuoteAllAttributes applied")
 	raw = fixUnquotedAttributes(raw)
+	raw = fixHalfQuotedAttributes(raw)
 	raw = escapeInvalidEntities(raw)
 
 	doc := etree.NewDocument()
+	// fmt.Println("📤 Sanitized XML preview:")
+	// fmt.Println(raw)
 	if err := doc.ReadFromString(raw); err != nil {
 		return "", fmt.Errorf("❌ etree failed to parse input XML: %w", err)
 	}
@@ -145,4 +172,34 @@ func DetectEscapedFillColors(raw string) ([]string, error) {
 	}
 
 	return offenders, nil
+}
+
+// ForceQuoteAllAttributes is a last-resort fix to quote any attr that looks like key=value
+func ForceQuoteAllAttributes(xml string) string {
+	re := regexp.MustCompile(`(<\w+[^>]*?)\s+([a-zA-Z_:]+)=([^\s"'/>]+)`)
+	for {
+		newXML := re.ReplaceAllString(xml, `$1 $2="$3"`)
+		if newXML == xml {
+			break
+		}
+		xml = newXML
+	}
+	return xml
+}
+
+// fixHalfQuotedAttributes detects values starting with a quote but missing the end quote
+func fixHalfQuotedAttributes(xml string) string {
+	re := regexp.MustCompile(`\b([a-zA-Z_:]+)="([^"]*?)(\s+[a-zA-Z_:]+=)`)
+	count := 0
+
+	xml = re.ReplaceAllStringFunc(xml, func(match string) string {
+		// Add missing closing quote before next attribute
+		count++
+		return regexp.MustCompile(`="([^"]*?)(\s+[a-zA-Z_:]+=)`).ReplaceAllString(match, `="$1"$2`)
+	})
+
+	if count > 0 {
+		fmt.Printf("🩹 Fixed %d half-quoted attribute(s)\n", count)
+	}
+	return xml
 }
