@@ -1,4 +1,3 @@
-// src/shared/xml.go
 package shared
 
 import (
@@ -37,9 +36,33 @@ func ExtractXMLFrom(response string) string {
 	return ""
 }
 
+// fixUnquotedAttributes ensures all attribute values are quoted, e.g., width=180 -> width="180"
+func fixUnquotedAttributes(xml string) string {
+	re := regexp.MustCompile(`([a-zA-Z_:]+)=([0-9a-zA-Z.#/_-]+)([\s>])`)
+	return re.ReplaceAllString(xml, `$1="$2"$3`)
+}
+
+// escapeInvalidEntities replaces standalone & with &amp;, excluding valid XML entities
+func escapeInvalidEntities(xml string) string {
+	// Replace all & with &amp;
+	xml = strings.ReplaceAll(xml, "&", "&amp;")
+
+	// Restore valid XML entities
+	xml = strings.ReplaceAll(xml, "&amp;lt;", "&lt;")
+	xml = strings.ReplaceAll(xml, "&amp;gt;", "&gt;")
+	xml = strings.ReplaceAll(xml, "&amp;quot;", "&quot;")
+	xml = strings.ReplaceAll(xml, "&amp;apos;", "&apos;")
+	xml = strings.ReplaceAll(xml, "&amp;amp;", "&amp;")
+
+	return xml
+}
+
 // SanitizeXML ensures all <mxGeometry> elements have required attributes.
-// Only fills in missing ones using safe defaults.
+// Also wraps unquoted attribute values and escapes invalid ampersands.
 func SanitizeXML(raw string) (string, error) {
+	raw = fixUnquotedAttributes(raw)
+	raw = escapeInvalidEntities(raw)
+
 	doc := etree.NewDocument()
 	if err := doc.ReadFromString(raw); err != nil {
 		return "", fmt.Errorf("❌ etree failed to parse input XML: %w", err)
@@ -55,7 +78,6 @@ func SanitizeXML(raw string) (string, error) {
 		"as":     "geometry",
 	}
 
-	// Fill missing attrs on each <mxGeometry>
 	for _, geo := range doc.FindElements("//mxGeometry") {
 		for _, key := range required {
 			if geo.SelectAttr(key) == nil {
@@ -69,14 +91,12 @@ func SanitizeXML(raw string) (string, error) {
 }
 
 // OffsetCellIDs modifies all mxCell id and parent attributes to avoid collisions.
-// Each layout gets a unique offset like 100, 200, etc.
 func OffsetCellIDs(raw string, offset int) (string, error) {
 	doc := etree.NewDocument()
 	if err := doc.ReadFromString(raw); err != nil {
 		return "", fmt.Errorf("failed to parse XML for ID offsetting: %w", err)
 	}
 
-	// Remap all ids
 	for _, cell := range doc.FindElements("//mxCell") {
 		if idAttr := cell.SelectAttr("id"); idAttr != nil {
 			if idInt, err := strconv.Atoi(idAttr.Value); err == nil {
