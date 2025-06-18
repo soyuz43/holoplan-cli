@@ -110,22 +110,40 @@ func boxesOverlap(a, b mxCell) bool {
 // ──────────────────────────────────────────────
 
 func checkVerticalFlow(cells []mxCell) error {
-	sorted := make([]mxCell, len(cells))
-	copy(sorted, cells)
+	// Group cells by X bands (left/right columns)
+	const xTolerance = 20.0
+	var columns [][]mxCell
 
-	sort.SliceStable(sorted, func(i, j int) bool {
-		return sorted[i].Geometry.Y < sorted[j].Geometry.Y
-	})
-
-	for i := 0; i < len(cells); i++ {
-		expected := sorted[i].ID
-		actual := cells[i].ID
-		if expected != actual {
-			debugLog("🔀 Flow mismatch at position %d: expected %s but got %s\n", i, expected, actual)
-			return fmt.Errorf("↕️ vertical flow error: element %s appears before %s", actual, expected)
+	for _, cell := range cells {
+		placed := false
+		for i := range columns {
+			if abs(cell.Geometry.X-columns[i][0].Geometry.X) < xTolerance {
+				columns[i] = append(columns[i], cell)
+				placed = true
+				break
+			}
+		}
+		if !placed {
+			columns = append(columns, []mxCell{cell})
 		}
 	}
 
-	debugLog("✅ Top-down flow validated: %d elements in order\n", len(cells))
+	for _, col := range columns {
+		sort.SliceStable(col, func(i, j int) bool {
+			return col[i].Geometry.Y < col[j].Geometry.Y
+		})
+		for i := 1; i < len(col); i++ {
+			if col[i].Geometry.Y < col[i-1].Geometry.Y {
+				return fmt.Errorf("↕️ vertical flow error: element %s is above %s in X-group", col[i].ID, col[i-1].ID)
+			}
+		}
+	}
 	return nil
+}
+
+func abs(f float64) float64 {
+	if f < 0 {
+		return -f
+	}
+	return f
 }

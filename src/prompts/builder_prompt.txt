@@ -15,7 +15,7 @@ Instructions:
   - A value attribute equal to the component's label
   - Exactly one <mxGeometry> child with properly quoted attributes:
     Example:
-    <mxCell id="3" value="Submit Button" style="rounded=1;whiteSpace=wrap;fillColor=&quot;#aed581&quot;" vertex="1" parent="1">
+    <mxCell id="3" value="Submit Button" style="rounded=1;whiteSpace=wrap;fillColor=#aed581 vertex="1" parent="1">
       <mxGeometry x="100" y="200" width="600" height="50" as="geometry"/>
     </mxCell>
 

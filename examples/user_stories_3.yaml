@@ -1,0 +1,76 @@
+- id: "US-201"
+  title: "Create New Order"
+  narrative: |
+    As a restaurant employee,
+    I want to create a new order for dine-in or delivery,
+    so that I can begin processing customer requests efficiently.
+
+- id: "US-202"
+  title: "Add Pizzas to Order"
+  narrative: |
+    As a staff member,
+    I want to add one or more pizzas to an order,
+    so that the customer's meal preferences are accurately captured.
+
+- id: "US-203"
+  title: "View Today's Orders"
+  narrative: |
+    As a team member,
+    I want to see all of today's orders sorted by time,
+    so that I can prioritize recent and active orders.
+
+- id: "US-204"
+  title: "See Order Details"
+  narrative: |
+    As a worker,
+    I want to view the full details of an order including its pizzas,
+    so that I can understand and prepare what needs to be fulfilled.
+
+- id: "US-205"
+  title: "Edit an Order"
+  narrative: |
+    As a restaurant employee,
+    I want to edit an existing order,
+    so that I can add or remove pizzas as needed.
+
+- id: "US-206"
+  title: "Assign Delivery Employee"
+  narrative: |
+    As a manager,
+    I want to assign a delivery employee to an order,
+    so that we know who is responsible for delivering it.
+
+- id: "US-207"
+  title: "Update Pizza Configuration"
+  narrative: |
+    As a staff member,
+    I want to update a pizza's size, cheese, sauce, or toppings,
+    so that the customer gets exactly what they ordered.
+
+- id: "US-208"
+  title: "Remove Pizza from Order"
+  narrative: |
+    As a restaurant employee,
+    I want to remove a pizza from an order,
+    so that I can reflect changes or cancellations requested by the customer.
+
+- id: "US-209"
+  title: "Cancel an Order"
+  narrative: |
+    As a staff member,
+    I want to cancel an entire order,
+    so that it is removed from the system when needed.
+
+- id: "US-210"
+  title: "Track Order Cost and Tips"
+  narrative: |
+    As an employee,
+    I want to see the total cost of an order and whether a tip was left,
+    so that I can complete the transaction and close the order properly.
+
+- id: "US-211"
+  title: "View Order Timestamps"
+  narrative: |
+    As a worker,
+    I want to see the time and date an order was placed,
+    so that I can verify when each order entered the system.
