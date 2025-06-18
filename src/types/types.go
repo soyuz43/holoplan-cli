@@ -16,9 +16,10 @@ func (c Critique) HasIssues() bool {
 
 // UserStory defines a single user story
 type UserStory struct {
-	ID        string `yaml:"id"`
-	Title     string `yaml:"title"`
-	Narrative string `yaml:"narrative"`
+	ID               string   `yaml:"id"`
+	Title            string   `yaml:"title"`
+	Narrative        string   `yaml:"narrative"`
+	SharedComponents []string `yaml:"shared_components,omitempty"`
 }
 
 // Components is a custom type that unmarshals from either a string array
