@@ -45,20 +45,61 @@ This will:
 
 * Go 1.20+
 * [Ollama](https://ollama.com/) installed and running locally
-* At least one of the following models:
+* And the following models:
 
-  * `hermes3:8b-llama3.1-q5_1` (for layout/correction)
-  * `qwen3` or `llama3` (for critique and chunking)
+  * `qwen2.5-coder:7b-instruct-q6_K` (for layout and correction)
+  * `llama3.1:8b` and `qwen2.5-coder:3b-instruct-q8_0` (for critique and chunking)
+  
+Let’s integrate your `install.ps1` script into the `README.md` with clear instructions for Windows 10/11 users, including:
 
-### 🏁 Build & Run
+* Setup guidance for PowerShell users
+* Notes about adding `~/bin` to their PATH if not already present
+* Emphasis that this script builds and installs the binary
+
+---
+
+### 🏁 Installation & Running
+
+#### 🪟 Windows 10/11 (PowerShell)
+
+Run the included PowerShell script to build and install the CLI to your local `~/bin` directory:
+
+```powershell
+.\install.ps1
+```
+
+This will:
+
+* Build `holoplan.exe` from `src/`
+* Install it to `C:\Users\<you>\bin\holoplan.exe`
+* ✅ You’ll see a success message if it worked
+
+👉 Make sure `C:\Users\<you>\bin\` is added to your system's **PATH**:
+
+* Search "Environment Variables"
+* Edit your `Path` system/user variable
+* Add: `C:\Users\<your-username>\bin\`
+
+Once installed, you can run it from any terminal:
+
+```powershell
+holoplan --stories examples/user_stories.yaml
+```
+
+#### 🐧 Linux / macOS
+
+You can build and run directly:
 
 ```bash
-# Run directly
 go run src/main.go --stories examples/user_stories.yaml
+```
 
-# Or build binary
+Or install the binary:
+
+```bash
 go build -o holoplan-cli
-./holoplan-cli --stories examples/user_stories.yaml
+sudo mv holoplan-cli /usr/local/bin/holoplan
+holoplan --stories examples/user_stories.yaml
 ```
 
 ### 📁 Output
