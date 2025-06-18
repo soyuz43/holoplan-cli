@@ -5,7 +5,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
-	"strconv"
+	"strings"
 
 	"holoplan-cli/src/agents"
 	"holoplan-cli/src/shared"
@@ -146,28 +146,28 @@ func saveOutput(viewName string, xml string, critique types.Critique) error {
 	return nil
 }
 
-// mergeDrawio combines all *.drawio files from the output directory into one valid mxGraphModel XML.
+// mergeDrawio builds a valid <mxfile> with one <diagram> per input .drawio file.
 func mergeDrawio(outputPath string) error {
 	files, err := filepath.Glob("output/*.drawio")
 	if err != nil {
 		return fmt.Errorf("failed to scan output files: %w", err)
 	}
 
-	var allCells []etree.Element
-	for i, file := range files {
-		offset := (i + 1) * 100
+	if len(files) == 0 {
+		return fmt.Errorf("no .drawio files found in output directory")
+	}
 
+	finalDoc := etree.NewDocument()
+	finalDoc.CreateProcInst("xml", `version="1.0" encoding="UTF-8"`)
+	mxfile := finalDoc.CreateElement("mxfile")
+
+	for _, file := range files {
 		content, err := os.ReadFile(file)
 		if err != nil {
 			return fmt.Errorf("failed to read %s: %w", file, err)
 		}
 
-		doc := etree.NewDocument()
-		if err := doc.ReadFromString(string(content)); err != nil {
-			return fmt.Errorf("failed to parse XML in %s: %w", file, err)
-		}
-
-		// Check for escaped fillColor issues
+		// Basic validation
 		offenders, err := shared.DetectEscapedFillColors(string(content))
 		if err != nil {
 			return fmt.Errorf("[x] Error detecting escaped colors in %s: %w", file, err)
@@ -176,50 +176,41 @@ func mergeDrawio(outputPath string) error {
 			return fmt.Errorf("[x] Escaped fillColor values detected in %s: %v", file, offenders)
 		}
 
-		// Offset IDs to avoid collisions
-		for _, cell := range doc.FindElements("//mxCell") {
-			if idAttr := cell.SelectAttr("id"); idAttr != nil {
-				if idInt, err := strconv.Atoi(idAttr.Value); err == nil {
-					idAttr.Value = strconv.Itoa(idInt + offset)
-				}
-			}
-			if parentAttr := cell.SelectAttr("parent"); parentAttr != nil {
-				if parentInt, err := strconv.Atoi(parentAttr.Value); err == nil {
-					parentAttr.Value = strconv.Itoa(parentInt + offset)
-				}
-			}
-
-			// Ensure valid mxCell structure
-			if len(cell.ChildElements()) == 0 {
-				cell.SetText("") // makes etree serialize as self-closing
-			}
+		// Parse the input file
+		subDoc := etree.NewDocument()
+		if err := subDoc.ReadFromString(string(content)); err != nil {
+			return fmt.Errorf("failed to parse XML in %s: %w", file, err)
 		}
 
-		// Collect <mxCell> elements from <root>
-		root := doc.FindElement("//root")
-		for _, cell := range root.ChildElements() {
-			allCells = append(allCells, *cell.Copy())
+		// Find the <mxGraphModel> element
+		model := subDoc.FindElement("//mxGraphModel")
+		if model == nil {
+			return fmt.Errorf("no <mxGraphModel> found in %s", file)
 		}
+
+		// Create a <diagram> element and append the <mxGraphModel> into it
+		diagram := mxfile.CreateElement("diagram")
+
+		// Clean up the filename for the diagram name
+		baseName := filepath.Base(file)
+		diagramName := strings.TrimSuffix(baseName, filepath.Ext(baseName))
+		diagram.CreateAttr("name", diagramName)
+
+		// Add the model to the diagram
+		diagram.AddChild(model.Copy())
 	}
 
-	// Construct final document
-	finalDoc := etree.NewDocument()
-	finalDoc.CreateProcInst("xml", `version="1.0" encoding="UTF-8"`)
-	graphModel := finalDoc.CreateElement("mxGraphModel")
-	root := graphModel.CreateElement("root")
-	for _, cell := range allCells {
-		root.AddChild(&cell)
-	}
-
-	// Validate final structure before saving
+	// Serialize to string with proper formatting
+	finalDoc.Indent(2)
 	finalXML, err := finalDoc.WriteToString()
 	if err != nil {
-		return fmt.Errorf("failed to serialize final merged XML: %w", err)
+		return fmt.Errorf("failed to serialize final <mxfile>: %w", err)
 	}
 
+	// Validate the final XML structure
 	validateDoc := etree.NewDocument()
 	if err := validateDoc.ReadFromString(finalXML); err != nil {
-		return fmt.Errorf("🚨 final merged XML is malformed: %w", err)
+		return fmt.Errorf("🚨 final merged <mxfile> is malformed: %w", err)
 	}
 
 	return os.WriteFile(outputPath, []byte(finalXML), 0644)
