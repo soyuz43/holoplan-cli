@@ -8,13 +8,13 @@
 
 ## ✨ Features
 
-- 📖 **YAML-based User Story Input**
-- 🧠 **LLM-based Story Chunking**
-- 🏗 **Qwen2.5 Coder Model Layout Builder**
-- 🔍 **Automated UI Critique + Correction Loop**
-- 📏 **Go-based Spatial Validation**
-- 🧾 **Draw.io XML Output + Critique Logs**
-- 🧪 **Merge All Views into a Single File**
+- **YAML-based User Story Input**
+- **LLM-based Story Chunking**
+- **Qwen2.5 Coder Model Layout Builder**
+- **Automated UI Critique + Correction Loop**
+- **Go-based Spatial Validation**
+- **Draw.io XML Output + Critique Logs**
+- **Merge All Views into a Single File**
 
 ---
 s
