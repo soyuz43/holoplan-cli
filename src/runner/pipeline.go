@@ -127,7 +127,8 @@ func saveOutput(viewName string, xml string, critique types.Critique) error {
 		return fmt.Errorf("failed to create output directory: %w", err)
 	}
 
-	xmlPath := filepath.Join("output", viewName+".drawio")
+	base := sanitize(viewName)
+	xmlPath := dedupeFilename("output", base, ".drawio")
 	if err := os.WriteFile(xmlPath, []byte(xml), 0644); err != nil {
 		return fmt.Errorf("failed to write XML: %w", err)
 	}
@@ -137,13 +138,31 @@ func saveOutput(viewName string, xml string, critique types.Critique) error {
 		for _, issue := range critique.Issues {
 			report += "- " + issue + "\n"
 		}
-		critiquePath := filepath.Join("output", viewName+".critique.txt")
+		critiquePath := dedupeFilename("output", base, ".critique.txt")
 		if err := os.WriteFile(critiquePath, []byte(report), 0644); err != nil {
 			return fmt.Errorf("failed to write critique report: %w", err)
 		}
 	}
 
 	return nil
+}
+
+func sanitize(name string) string {
+	// Normalize name to filesystem-safe format
+	return strings.ReplaceAll(strings.ToLower(strings.TrimSpace(name)), " ", "_")
+}
+
+func dedupeFilename(dir, base, ext string) string {
+	for i := 0; ; i++ {
+		name := base
+		if i > 0 {
+			name = fmt.Sprintf("%s_%d", base, i)
+		}
+		fullPath := filepath.Join(dir, name+ext)
+		if _, err := os.Stat(fullPath); os.IsNotExist(err) {
+			return fullPath
+		}
+	}
 }
 
 // mergeDrawio builds a valid <mxfile> with one <diagram> per input .drawio file.
