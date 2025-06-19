@@ -107,8 +107,8 @@ func Chunk(story types.UserStory) types.ViewPlan {
 	cleaned := extractCleanJSON(parsed.Message.Content)
 
 	// Debug Line: print the extracted JSON from the chunker
-	fmt.Println("\n🔎 DEBUG: Cleaned JSON extracted from LLM response:")
-	fmt.Println(cleaned)
+	// fmt.Println("\n🔎 DEBUG: Cleaned JSON extracted from LLM response:")
+	// fmt.Println(cleaned)
 
 	var plan types.ViewPlan
 	err = json.Unmarshal([]byte(cleaned), &plan)

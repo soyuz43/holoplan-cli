@@ -1,32 +1,29 @@
-// src/agents/builder.go
 package agents
 
 import (
 	"bytes"
+	_ "embed"
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"os"
 	"strings"
 
 	"holoplan-cli/src/shared"
 	"holoplan-cli/src/types"
 )
 
+//go:embed prompts/builder_prompt.txt
+var builderPrompt string
+
 // Build takes a ViewLayout and generates Draw.io XML layout via LLM.
 // If anything fails, it returns an empty string and logs the reason.
 func Build(view types.ViewLayout) string {
-	template, err := os.ReadFile("src/prompts/builder_prompt.txt")
-	if err != nil {
-		fmt.Printf("⚠️ Failed to read builder prompt template: %v\n", err)
-		return ""
-	}
-
-	prompt := strings.ReplaceAll(string(template), "{{view_name}}", view.Name)
+	// 🔧 Fill in template placeholders
+	prompt := strings.ReplaceAll(builderPrompt, "{{view_name}}", view.Name)
 	prompt = strings.ReplaceAll(prompt, "{{view_type}}", view.Type)
 	prompt = strings.ReplaceAll(prompt, "{{components}}", strings.Join(view.Components, ", "))
 
-	// 🔍 Print the final prompt before sending it to the LLM
+	// 📤 DEBUG: Print the final prompt before sending it to the LLM
 	// fmt.Printf("📤 DEBUG Prompt for view '%s':\n%s\n", view.Name, prompt)
 
 	response, err := callOllamaForLayout(prompt)
@@ -34,8 +31,6 @@ func Build(view types.ViewLayout) string {
 		fmt.Printf("⚠️ Builder LLM call failed for view '%s': %v\n", view.Name, err)
 		return ""
 	}
-
-	// fmt.Printf("🧪 DEBUG: Raw LLM response for '%s':\n%s\n", view.Name, response)
 
 	if strings.TrimSpace(response) == "" {
 		fmt.Printf("⚠️ Empty response from LLM for view '%s'. Skipping.\n", view.Name)
@@ -58,7 +53,7 @@ func callOllamaForLayout(prompt string) (string, error) {
 		"prompt": prompt,
 		"options": map[string]interface{}{
 			"temperature": 0.0,
-			"seed":        42, // optional
+			"seed":        42,
 		},
 	}
 	b, err := json.Marshal(body)
