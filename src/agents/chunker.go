@@ -51,7 +51,7 @@ func escapeLineBreaks(input string) string {
 // Chunk takes a UserStory and extracts views using the LLM.
 func Chunk(story types.UserStory) types.ViewPlan {
 	payload := map[string]interface{}{
-		"model":  "qwen2.5-coder:3b-instruct-q8_0",
+		"model":  "qwen2.5-coder:7b-instruct-q6_K",
 		"stream": false,
 		"options": map[string]interface{}{
 			"temperature": 0.0,
@@ -67,7 +67,7 @@ func Chunk(story types.UserStory) types.ViewPlan {
 				- views: array of {name, type, components}
 				- reasoning: short explanation of how you decided on the views
 
-			Each view should include a reasonable set of UI components based on the story. Components should be descriptive nouns or short phrases like "Dog Image", "Breed", "Age", "Adopt Button".
+			Each view should include a reasonable set of UI components based on the story. Components should be descriptive nouns or short phrases like "Dog Image", "Breed", "Age", "Adopt Button". Each individual view will contain a Navbar and Footer component. There should be no views dedicated to the navbar and footer alone.
 
 			Respond ONLY with a JSON object. Do not include explanations, markdown, or extra formatting.`,
 			},
@@ -107,8 +107,8 @@ func Chunk(story types.UserStory) types.ViewPlan {
 	cleaned := extractCleanJSON(parsed.Message.Content)
 
 	// Debug Line: print the extracted JSON from the chunker
-	// fmt.Println("\n🔎 DEBUG: Cleaned JSON extracted from LLM response:")
-	// fmt.Println(cleaned)
+	fmt.Println("\n🔎 DEBUG: Cleaned JSON extracted from LLM response:")
+	fmt.Println(cleaned)
 
 	var plan types.ViewPlan
 	err = json.Unmarshal([]byte(cleaned), &plan)

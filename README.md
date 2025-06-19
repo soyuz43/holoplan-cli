@@ -17,28 +17,7 @@
 - 🧪 **Merge All Views into a Single File**
 
 ---
-
-## 📦 Example
-
-```bash
-holoplan-cli --stories examples/user_stories.yaml
-```
-
-This will:
-
-1. Load each user story
-2. Chunk it into views
-3. Generate `.drawio.xml` files for each
-4. Auto-correct bad layouts
-5. Validate spatial geometry
-6. Output:
-
-   * Per-view XML files in `output/`
-   * Critique reports (if needed)
-   * Merged `final.drawio.xml`
-
----
-
+s
 ## 🔧 Usage
 
 ### ✅ Requirements
