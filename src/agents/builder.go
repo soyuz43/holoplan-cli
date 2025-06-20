@@ -49,7 +49,7 @@ func Build(view types.ViewLayout) string {
 // callOllamaForLayout streams a completion from Ollama and returns the full text.
 func callOllamaForLayout(prompt string) (string, error) {
 	body := map[string]interface{}{
-		"model":  "qwen2.5-coder:3b-instruct-q8_0",
+		"model":  "qwen2.5-coder:7b-instruct-q6_K",
 		"prompt": prompt,
 		"options": map[string]interface{}{
 			"temperature": 0.0,
