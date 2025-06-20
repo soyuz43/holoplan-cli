@@ -17,7 +17,7 @@
 - **Merge All Views into a Single File**
 
 ---
-s
+
 ## 🔧 Usage
 
 ### ✅ Requirements
