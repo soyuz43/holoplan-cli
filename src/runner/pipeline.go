@@ -1,3 +1,4 @@
+// src\runner\pipeline.go
 package runner
 
 import (
@@ -72,7 +73,7 @@ func RunPipeline(yamlPath string) error {
 				fmt.Println("✅ Spatial layout passed")
 			}
 
-			err = saveOutput(view.Name, xml, critique)
+			err = saveOutput(story.ID, view.Name, xml, critique)
 			if err != nil {
 				log.Printf("⚠️ Failed to save output: %v", err)
 			}
@@ -122,13 +123,16 @@ func recoverLLM(agent string) {
 	}
 }
 
-func saveOutput(viewName string, xml string, critique types.Critique) error {
+func saveOutput(storyID, viewName string, xml string, critique types.Critique) error {
 	if err := os.MkdirAll("output", os.ModePerm); err != nil {
 		return fmt.Errorf("failed to create output directory: %w", err)
 	}
 
-	base := sanitize(viewName)
-	xmlPath := dedupeFilename("output", base, ".drawio")
+	// Combine storyID and viewName, then sanitize
+	base := sanitize(fmt.Sprintf("%s_%s", storyID, viewName))
+
+	// Use simple filepath.Join instead of dedupeFilename since we now have unique names
+	xmlPath := filepath.Join("output", base+".drawio")
 	if err := os.WriteFile(xmlPath, []byte(xml), 0644); err != nil {
 		return fmt.Errorf("failed to write XML: %w", err)
 	}
@@ -138,7 +142,7 @@ func saveOutput(viewName string, xml string, critique types.Critique) error {
 		for _, issue := range critique.Issues {
 			report += "- " + issue + "\n"
 		}
-		critiquePath := dedupeFilename("output", base, ".critique.txt")
+		critiquePath := filepath.Join("output", base+".critique.txt")
 		if err := os.WriteFile(critiquePath, []byte(report), 0644); err != nil {
 			return fmt.Errorf("failed to write critique report: %w", err)
 		}
@@ -148,21 +152,9 @@ func saveOutput(viewName string, xml string, critique types.Critique) error {
 }
 
 func sanitize(name string) string {
-	// Normalize name to filesystem-safe format
-	return strings.ReplaceAll(strings.ToLower(strings.TrimSpace(name)), " ", "_")
-}
-
-func dedupeFilename(dir, base, ext string) string {
-	for i := 0; ; i++ {
-		name := base
-		if i > 0 {
-			name = fmt.Sprintf("%s_%d", base, i)
-		}
-		fullPath := filepath.Join(dir, name+ext)
-		if _, err := os.Stat(fullPath); os.IsNotExist(err) {
-			return fullPath
-		}
-	}
+	// Keep hyphens and underscores, just replace spaces and convert to lowercase
+	name = strings.ReplaceAll(strings.TrimSpace(name), " ", "_")
+	return strings.ToLower(name)
 }
 
 // mergeDrawio builds a valid <mxfile> with one <diagram> per input .drawio file.
