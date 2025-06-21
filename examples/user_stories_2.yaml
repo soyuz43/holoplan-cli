@@ -1,32 +1,32 @@
-- id: "US-101"
+- id: "US-201"
   title: "Browse Indoor Plants"
   narrative: |
     As a plant enthusiast,
     I want to browse a list of indoor plants,
     so that I can choose one that suits my home environment.
 
-- id: "US-102"
+- id: "US-202"
   title: "View Plant Details"
   narrative: |
     As a shopper,
     I want to click on a plant card,
     so that I can read more about its care instructions and price.
 
-- id: "US-103"
+- id: "US-203"
   title: "Add Plant to Cart"
   narrative: |
     As a customer,
     I want to add a plant to my shopping cart,
     so that I can purchase it later after reviewing other options.
 
-- id: "US-104"
+- id: "US-204"
   title: "Checkout with Delivery Options"
   narrative: |
     As a user,
     I want to choose delivery or in-store pickup during checkout,
     so that I can receive my plant in the most convenient way.
 
-- id: "US-105"
+- id: "US-205"
   title: "Track My Order"
   narrative: |
     As a buyer,
