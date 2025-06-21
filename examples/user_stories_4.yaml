@@ -1,32 +1,32 @@
-- id: "US-201"
+- id: "US-401"
   title: "Record a New Dream"
   narrative: |
     As a user,
     I want to record a new dream by navigating to the "Add Dream" page and submitting a title, content, category, tags, and visibility preference,
     so that the new dream appears in my personal dream journal view.
 
-- id: "US-202"
+- id: "US-402"
   title: "Add Tags to a Dream"
   narrative: |
     As a user,
     I want to add tags to my dream by selecting or creating tags during dream entry,
     so that the tags are saved and displayed alongside the dream in my journal.
 
-- id: "US-203"
+- id: "US-403"
   title: "View Public Dreams"
   narrative: |
     As a user,
     I want to browse a feed of anonymized dreams marked as public by other users in the "Public Dreams" section,
     so that I can view dream content, categories, and tags.
 
-- id: "US-204"
+- id: "US-404"
   title: "Search Dreams"
   narrative: |
     As a user,
     I want to filter and search dreams by selecting one or more tags or categories from the filter menu,
     so that the dream journal view or public dreams feed updates to show only matching entries.
 
-- id: "US-205"
+- id: "US-405"
   title: "Delete a Dream"
   narrative: |
     As a user,

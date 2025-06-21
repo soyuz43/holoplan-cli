@@ -1,18 +1,18 @@
-- id: "US-001"
+- id: "US-011"
   title: "List Adoptable Dogs"
   narrative: |
     As a visitor,
     I want to see a list of dogs available for adoption beneath a site-wide navbar and above a footer,
     so that I can browse adoptable dogs in a consistent layout.
 
-- id: "US-002"
+- id: "US-012"
   title: "View Dog Details"
   narrative: |
     As a user,
     I want to click on a dog card to view its profile,
     and I expect the page to include the same navbar and footer for navigation and site consistency.
 
-- id: "US-003"
+- id: "US-013"
   title: "Submit Adoption Request"
   narrative: |
     As a visitor,
