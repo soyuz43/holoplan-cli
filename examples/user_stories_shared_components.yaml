@@ -1,9 +1,11 @@
 - id: "US-101"
-  title: "Browse Indoor Plants"
+  title: "Landing Page: Browse Plants"
   narrative: |
     As a plant enthusiast,
-    I want to browse a list of indoor plants,
-    so that I can choose one that suits my home environment.
+    I want to see an initial list of indoor plants,
+    so I can choose one that suits my home.
+
+  view: "home"
   shared_components:
     - "Navigation Bar"
     - "Footer"
@@ -12,18 +14,24 @@
   title: "View Plant Details"
   narrative: |
     As a shopper,
-    I want to click on a plant card,
-    so that I can read more about its care instructions and price.
+    I want to click on a plant from the home screen,
+    so I can view detailed care instructions and price.
+
+  interaction_origin: "home"
+  view: "plant_detail"
   shared_components:
     - "Navigation Bar"
     - "Footer"
 
 - id: "US-103"
-  title: "Add Plant to Cart"
+  title: "Cart Interaction from Plant Detail"
   narrative: |
-    As a customer,
-    I want to add a plant to my shopping cart,
-    so that I can purchase it later after reviewing other options.
+    As a customer on the "Plant Detail" screen (US-102),
+    I want to click "Add to Cart,"
+    so that the selected plant appears in the Shopping Cart view.
+
+  interaction_origin: "plant_detail"
+  view: "shopping_cart"
   shared_components:
     - "Navigation Bar"
     - "Footer"
@@ -31,19 +39,27 @@
 - id: "US-104"
   title: "Checkout with Delivery Options"
   narrative: |
-    As a user,
-    I want to choose delivery or in-store pickup during checkout,
-    so that I can receive my plant in the most convenient way.
+    As a user reviewing their cart,
+    I want to proceed to checkout and select delivery or pickup,
+    so I can receive my plant in the most convenient way.
+
+  interaction_origin: "shopping_cart"
+  view: "checkout"
   shared_components:
     - "Navigation Bar"
     - "Footer"
 
 - id: "US-105"
-  title: "Track My Order"
+  title: "Track Order and View Shipping Details"
   narrative: |
     As a buyer,
-    I want to track the shipping status of my plant order,
-    so that I know when it will arrive.
+    I want to check my order details and shipping status,
+    so I know when my plant will arrive.
+
+  interaction_origin: "order_history"
+  views:
+    - "order_details"
+    - "shipping_status"
   shared_components:
     - "Navigation Bar"
     - "Footer"

@@ -1,4 +1,3 @@
-// src/agents/chunker.go
 package agents
 
 import (
@@ -16,40 +15,63 @@ const ollamaURL = "http://localhost:11434/api/chat"
 
 // Remove <think> tags and clean up LLM output
 func extractCleanJSON(raw string) string {
-	// 1. Remove all <think>...</think> blocks
 	reThink := regexp.MustCompile(`(?s)<think>.*?</think>`)
 	cleaned := reThink.ReplaceAllString(raw, "")
-
-	// 2. Trim surrounding whitespace
 	cleaned = strings.TrimSpace(cleaned)
 
-	// 3. Extract first valid JSON object (naively)
 	start := strings.Index(cleaned, "{")
 	end := strings.LastIndex(cleaned, "}")
 	if start == -1 || end == -1 || start > end {
-		return cleaned // fallback to raw
+		return cleaned
 	}
 	jsonChunk := cleaned[start : end+1]
-
-	// 4. Escape any literal newlines inside string fields
-	jsonChunk = escapeLineBreaks(jsonChunk)
-
-	return jsonChunk
+	return escapeLineBreaks(jsonChunk)
 }
 
 // Naively escape unescaped newlines within double-quoted values
 func escapeLineBreaks(input string) string {
 	re := regexp.MustCompile(`"([^"\\]*(?:\\.[^"\\]*)*)"`)
-
 	return re.ReplaceAllStringFunc(input, func(match string) string {
-		unescaped := match[1 : len(match)-1] // remove quotes
+		unescaped := match[1 : len(match)-1]
 		escaped := strings.ReplaceAll(unescaped, "\n", `\n`)
 		return `"` + escaped + `"`
 	})
 }
 
-// Chunk takes a UserStory and extracts views using the LLM.
+// Chunk takes a UserStory and extracts views using the LLM
 func Chunk(story types.UserStory) types.ViewPlan {
+	sysPrompt := `
+You are the StoryChunker.
+
+Given structured user story metadata, return a JSON object with:
+
+- views: an array of {name, type, components}
+- reasoning: a short explanation of how you broke the story into views
+
+Each view should include a Navbar and Footer component. Each view should include a reasonable set of UI components based on the story. Including buttons, images, etc. Components should be descriptive nouns or short phrases.
+
+Respond ONLY with a raw JSON object. Do not include explanations, markdown, tags, or commentary.`
+
+	userPrompt := fmt.Sprintf(`User Story:
+
+- ID: %s
+- Title: %s
+- Narrative: %s
+- View: %s
+- Views: %v
+- Interaction Origin: %s
+- Resulting View: %s
+- Shared Components: %v`,
+		story.ID,
+		story.Title,
+		story.Narrative,
+		story.View,
+		story.Views,
+		story.InteractionOrigin,
+		story.ResultingView,
+		story.SharedComponents,
+	)
+
 	payload := map[string]interface{}{
 		"model":  "qwen2.5-coder:7b-instruct-q6_K",
 		"stream": false,
@@ -58,23 +80,8 @@ func Chunk(story types.UserStory) types.ViewPlan {
 			"seed":        42,
 		},
 		"messages": []map[string]string{
-			{
-				"role": "system",
-				"content": `You are the StoryChunker.
-
-				Given a user story, return a JSON object with:
-
-				- views: array of {name, type, components}
-				- reasoning: short explanation of how you decided on the views
-
-			Each view should include a reasonable set of UI components based on the story. Components should be descriptive nouns or short phrases like "Dog Image", "Breed", "Age", "Adopt Button". Each individual view will contain a Navbar and Footer component. There should be no views dedicated to the navbar and footer alone.
-
-			Respond ONLY with a JSON object. Do not include explanations, markdown, or extra formatting.`,
-			},
-			{
-				"role":    "user",
-				"content": fmt.Sprintf("User story:\n%s", story.Narrative),
-			},
+			{"role": "system", "content": strings.TrimSpace(sysPrompt)},
+			{"role": "user", "content": strings.TrimSpace(userPrompt)},
 		},
 	}
 
@@ -99,20 +106,20 @@ func Chunk(story types.UserStory) types.ViewPlan {
 			Content string `json:"content"`
 		} `json:"message"`
 	}
-	err = json.Unmarshal(body, &parsed)
-	if err != nil {
+	if err := json.Unmarshal(body, &parsed); err != nil {
 		panic(fmt.Errorf("failed to unmarshal Ollama API response: %w", err))
 	}
 
 	cleaned := extractCleanJSON(parsed.Message.Content)
 
-	// Debug Line: print the extracted JSON from the chunker
-	// fmt.Println("\n🔎 DEBUG: Cleaned JSON extracted from LLM response:")
-	// fmt.Println(cleaned)
+	// Uncomment this block for debugging
+	/*
+		fmt.Println("\n🔎 DEBUG: Cleaned JSON extracted from LLM response:")
+		fmt.Println(cleaned)
+	*/
 
 	var plan types.ViewPlan
-	err = json.Unmarshal([]byte(cleaned), &plan)
-	if err != nil {
+	if err := json.Unmarshal([]byte(cleaned), &plan); err != nil {
 		fmt.Println("\n🛑 Failed to parse cleaned JSON:")
 		fmt.Println("──── Original Output ────")
 		fmt.Println(parsed.Message.Content)

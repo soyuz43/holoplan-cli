@@ -174,8 +174,8 @@ Merge all → final.drawio.xml
 ## 🤖 Models + Prompts
 
 * Uses LLMs to emulate deterministic UI compilers
-* Prompts live in `src/prompts/`
-* Builder uses Hermes; chunker/auditor use Llama/Qwen variants
+* Prompts live in `src/agents/prompts/`
+* Builder uses Qwen2.5; chunker/auditor use Llama3/Qwen2.5 variants
 
 ---
 

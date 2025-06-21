@@ -15,11 +15,16 @@ func (c Critique) HasIssues() bool {
 }
 
 // UserStory defines a single user story
+// UserStory defines a single user story
 type UserStory struct {
-	ID               string   `yaml:"id"`
-	Title            string   `yaml:"title"`
-	Narrative        string   `yaml:"narrative"`
-	SharedComponents []string `yaml:"shared_components,omitempty"`
+	ID                string   `yaml:"id"`
+	Title             string   `yaml:"title"`
+	Narrative         string   `yaml:"narrative"`
+	InteractionOrigin string   `yaml:"interaction_origin,omitempty"` // e.g., "plant_detail"
+	View              string   `yaml:"view,omitempty"`               // for single-view stories
+	Views             []string `yaml:"views,omitempty"`              // for multi-view stories
+	ResultingView     string   `yaml:"resulting_view,omitempty"`     // if action produces a new view
+	SharedComponents  []string `yaml:"shared_components,omitempty"`  // persistent UI elements
 }
 
 // Components is a custom type that unmarshals from either a string array
