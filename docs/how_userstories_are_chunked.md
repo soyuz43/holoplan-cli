@@ -92,7 +92,7 @@ so that I can choose one that suits my home environment.
 
 ---
 
-## 🧠 Agent Logic Summary
+## Agent Logic Summary
 
 * Uses temperature 0 and deterministic seed
 * Extracts raw JSON from noisy LLM outputs using `extractCleanJSON()`

@@ -13,7 +13,7 @@
 - **Qwen2.5 Coder Model Layout Builder**
 - **Automated UI Critique + Correction Loop**
 - **Go-based Spatial Validation**
-- **Draw.io XML Output + Critique Logs**
+- **Draw.io XML Output + Deterministic Output**
 - **Merge All Views into a Single File**
 
 ---
@@ -164,6 +164,7 @@ Merge all → final.drawio.xml
 
 ## 🧭 Roadmap Ideas
 
+* [ ] Critique Logs
 * [ ] CLI flags for output path, skip audit, etc.
 * [ ] Add support for Figma export
 * [ ] GUI wrapper for non-CLI users
