@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"log" // Ensure log package is imported
 	"net/http"
 	"strings"
 
@@ -13,6 +14,9 @@ import (
 
 func Audit(story types.UserStory, xml string) types.Critique {
 	prompt := buildAuditPrompt(story, xml)
+
+	// Log the full prompt for debugging
+	log.Printf("📝 Audit Prompt:\n%s\n", prompt)
 
 	response, err := callOllama(prompt)
 	if err != nil {
@@ -77,5 +81,8 @@ func callOllama(prompt string) (string, error) {
 	if err != nil {
 		return "", err
 	}
+	// DEBUG: Log the auditor response
+	log.Printf("📤 LLM Response:\n%s\n", output.Response)
+
 	return output.Response, nil
 }
