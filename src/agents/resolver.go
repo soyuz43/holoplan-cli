@@ -63,17 +63,17 @@ func formatList(items []string) string {
 	return out.String()
 }
 
-// callOllamaForCorrection sends the filled prompt to the LLM backend
+// callOllamaForCorrection sends the filled prompt to Ollama and returns the raw XML
 func callOllamaForCorrection(prompt string) (string, error) {
 	body := map[string]interface{}{
 		"model":  "qwen2.5-coder:7b-instruct-q6_K",
 		"prompt": prompt,
 		"stream": false,
-		"format": "text",
 		"options": map[string]float64{
 			"temperature": 0.0,
 		},
 	}
+
 	b, err := json.Marshal(body)
 	if err != nil {
 		return "", fmt.Errorf("failed to marshal request body: %w", err)
@@ -81,7 +81,7 @@ func callOllamaForCorrection(prompt string) (string, error) {
 
 	resp, err := http.Post("http://localhost:11434/api/generate", "application/json", bytes.NewBuffer(b))
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("HTTP error: %w", err)
 	}
 	defer resp.Body.Close()
 
@@ -89,37 +89,23 @@ func callOllamaForCorrection(prompt string) (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("failed to read response body: %w", err)
 	}
-	log.Printf("📥 Raw Ollama Response:\n%s\n", string(bodyBytes))
 
 	var output struct {
 		Response string `json:"response"`
 		Done     bool   `json:"done"`
 	}
-	err = json.Unmarshal(bodyBytes, &output)
-	if err != nil {
-		return "", fmt.Errorf("failed to decode JSON response: %w", err)
+	if err := json.Unmarshal(bodyBytes, &output); err != nil {
+		return "", fmt.Errorf("failed to parse top-level JSON: %w", err)
 	}
 
 	if !output.Done {
-		log.Printf("🚨 Response not marked as done: %v", output)
-		return "", fmt.Errorf("incomplete LLM response")
+		return "", fmt.Errorf("incomplete LLM response: %#v", output)
 	}
 
-	log.Printf("📤 LLM Response:\n%s\n", output.Response)
-
-	var responseJSON struct {
-		XML string `json:"xml"`
-	}
-	err = json.Unmarshal([]byte(output.Response), &responseJSON)
-	if err != nil {
-		log.Printf("🚨 Failed to parse JSON response: %v\nRaw response:\n%s\n", err, output.Response)
-		return "", fmt.Errorf("malformed LLM response: invalid JSON format")
+	rawXML := output.Response
+	if strings.TrimSpace(rawXML) == "" {
+		return "", fmt.Errorf("empty XML returned")
 	}
 
-	if responseJSON.XML == "" {
-		log.Printf("🚨 LLM response contains empty XML:\n%s\n", output.Response)
-		return "", fmt.Errorf("malformed LLM response: no XML provided")
-	}
-
-	return responseJSON.XML, nil
+	return rawXML, nil
 }
