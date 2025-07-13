@@ -26,6 +26,15 @@ Instructions:
     <mxGeometry x="100" y="200" width=600 height=50 as="geometry"/>
     ```
 
+Labeling Guidelines:
+- Use component labels (the `value` attribute) that match key **nouns or phrases** from the user story.
+  ✅ Good: "Plant List", "Profile Card", "Submit Button", "Adoption Form"
+  ❌ Bad: "CardThing", "Box1", "Component", "Widget"
+- If a user story mentions a collection (e.g., "a list of X", "a set of options"), use labels like "X List", "X Cards", or "List of X".
+- Use title case for all labels (e.g., "Search Bar", "Contact Form").
+- Avoid overly specific or ambiguous internal names (e.g., "InfoBox", "DogCard", "UserComponent") unless explicitly mentioned.
+- If the story implies interaction (e.g., "click", "select", "fill out"), the label must reflect the purpose clearly (e.g., "Select Option", "Submit Button").
+
 Structural Requirements:
 - You must include:
   - `<mxCell id="0"/>` — the root container

@@ -21,6 +21,7 @@ var resolverPrompt string
 // Resolve uses an LLM to repair layout XML based on critique feedback and user story
 func Resolve(xml string, critique types.Critique, story types.UserStory) string {
 	prompt := buildCorrectionPrompt(xml, critique.Issues, story)
+	// DEBUG: Uncomment this line to see the prompt sent to the resolver
 	// log.Printf("📝 Resolver Prompt:\n%s\n", prompt)
 
 	response, err := callOllamaForCorrection(prompt)
@@ -41,7 +42,7 @@ func Resolve(xml string, critique types.Critique, story types.UserStory) string 
 		return xml
 	}
 
-	log.Printf("✅ Sanitized Corrected XML:\n%s\n", sanitizedXML)
+	// log.Printf("✅ Sanitized Corrected XML:\n%s\n", sanitizedXML)
 	return sanitizedXML
 }
 
@@ -71,6 +72,7 @@ func callOllamaForCorrection(prompt string) (string, error) {
 		"stream": false,
 		"options": map[string]float64{
 			"temperature": 0.0,
+			"seed":        42,
 		},
 	}
 
