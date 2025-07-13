@@ -1,7 +1,9 @@
+// src\agents\chunker.go
 package agents
 
 import (
 	"bytes"
+	_ "embed"
 	"encoding/json"
 	"fmt"
 	"holoplan-cli/src/types"
@@ -10,6 +12,9 @@ import (
 	"regexp"
 	"strings"
 )
+
+//go:embed prompts/chunker_prompt.txt
+var chunkerSystemPrompt string
 
 const ollamaURL = "http://localhost:11434/api/chat"
 
@@ -40,17 +45,7 @@ func escapeLineBreaks(input string) string {
 
 // Chunk takes a UserStory and extracts views using the LLM
 func Chunk(story types.UserStory) types.ViewPlan {
-	sysPrompt := `
-You are the StoryChunker.
-
-Given structured user story metadata, return a JSON object with:
-
-- views: an array of {name, type, components}
-- reasoning: a short explanation of how you broke the story into views
-
-Each view should include a Navbar and Footer component. Each view should include a reasonable set of UI components based on the story. Including buttons, images, etc. Components should be descriptive nouns or short phrases.
-
-Respond ONLY with a raw JSON object. Do not include explanations, markdown, tags, or commentary.`
+	sysPrompt := chunkerSystemPrompt
 
 	userPrompt := fmt.Sprintf(`User Story:
 

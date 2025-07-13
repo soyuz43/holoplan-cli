@@ -13,8 +13,6 @@ import (
 
 	"holoplan-cli/src/shared"
 	"holoplan-cli/src/types"
-
-	"github.com/beevik/etree"
 )
 
 //go:embed prompts/resolver_prompt.txt
@@ -23,7 +21,6 @@ var resolverPrompt string
 // Resolve uses an LLM to repair layout XML based on critique feedback and user story
 func Resolve(xml string, critique types.Critique, story types.UserStory) string {
 	prompt := buildCorrectionPrompt(xml, critique.Issues, story)
-
 	log.Printf("📝 Resolver Prompt:\n%s\n", prompt)
 
 	response, err := callOllamaForCorrection(prompt)
@@ -38,13 +35,14 @@ func Resolve(xml string, critique types.Critique, story types.UserStory) string 
 		return xml
 	}
 
-	doc := etree.NewDocument()
-	if err := doc.ReadFromString(extractedXML); err != nil {
-		log.Printf("🚨 Resolver returned malformed XML: %v\nRaw XML:\n%s\n", err, extractedXML)
+	sanitizedXML, err := shared.SanitizeXML(extractedXML)
+	if err != nil {
+		log.Printf("🚨 Sanitization failed: %v\nRaw XML:\n%s\n", err, extractedXML)
 		return xml
 	}
 
-	return extractedXML
+	log.Printf("✅ Sanitized Corrected XML:\n%s\n", sanitizedXML)
+	return sanitizedXML
 }
 
 // buildCorrectionPrompt fills the embedded resolver prompt template with values
@@ -71,7 +69,7 @@ func callOllamaForCorrection(prompt string) (string, error) {
 		"model":  "qwen2.5-coder:7b-instruct-q6_K",
 		"prompt": prompt,
 		"stream": false,
-		"format": "json",
+		"format": "text",
 		"options": map[string]float64{
 			"temperature": 0.0,
 		},
