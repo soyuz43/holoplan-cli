@@ -89,7 +89,7 @@ func callOllama(prompt string) (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("failed to read response body: %w", err)
 	}
-	log.Printf("📥 Raw Ollama Response:\n%s\n", string(bodyBytes))
+	// log.Printf("📥 Raw Ollama Response:\n%s\n", string(bodyBytes))
 
 	var output struct {
 		Response string `json:"response"`

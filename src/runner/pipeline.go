@@ -17,7 +17,7 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-const MaxCorrections = 3
+const MaxCorrections = 1
 
 func RunPipeline(yamlPath string) error {
 	stories, err := loadStories(yamlPath)
@@ -43,37 +43,28 @@ func RunPipeline(yamlPath string) error {
 				continue
 			}
 
+			// Audit the initial XML only
 			critique, ok := safeAudit(story, xml)
 			if !ok {
 				log.Printf("⚠️ Failed to audit layout for view: %s\n", view.Name)
 				continue
 			}
 
-			attempt := 0
-			for critique.HasIssues() && attempt < MaxCorrections {
-				fmt.Printf("🔁 Correction attempt %d for %s\n", attempt+1, view.Name)
-
+			// Attempt resolution only if there are issues and within MaxCorrections
+			if critique.HasIssues() {
+				fmt.Printf("🔁 Correction attempt 1 for %s\n", view.Name)
 				// Pass the user story to Resolve
-				xml, ok = safeResolve(xml, critique, story)
-				if !ok {
-					log.Printf("⚠️ Resolve failed at attempt %d — aborting view\n", attempt+1)
-					break
+				resolvedXML, ok := safeResolve(xml, critique, story)
+				if ok {
+					xml = resolvedXML // Use resolved XML if successful
+				} else {
+					log.Printf("⚠️ Resolve failed at attempt 1 — proceeding with original XML\n")
 				}
-
-				// Re-audit the corrected XML
-				log.Printf("🔍 Re-auditing corrected XML for view: %s", view.Name)
-				critique, ok = safeAudit(story, xml)
-				if !ok {
-					log.Printf("⚠️ Audit failed during retry — aborting view\n")
-					break
-				}
-				attempt++
+			} else {
+				log.Printf("✅ No issues found in initial audit for view: %s", view.Name)
 			}
 
-			if !critique.HasIssues() {
-				log.Printf("✅ No further issues after %d attempts for view: %s", attempt, view.Name)
-			}
-
+			// Skip re-auditing the corrected XML
 			xml = shared.ForceQuoteAllAttributes(xml)
 			if err := validator.CheckLayout(xml); err != nil {
 				log.Printf("❌ Layout validation failed: %v", err)
