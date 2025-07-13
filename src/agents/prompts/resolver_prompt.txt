@@ -12,4 +12,7 @@ Here is the user story for context:
 Here is the original layout:
 {{xml}}
 
-Return only the corrected XML. Do not include explanations or extra text.
+Return only the corrected Draw.io layout XML.  
+Do not include explanations, markdown, or JSON wrappers.  
+Do not escape characters or add quotes.  
+Only output valid <mxGraphModel> XML.
