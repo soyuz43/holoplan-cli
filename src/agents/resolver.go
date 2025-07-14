@@ -22,7 +22,7 @@ var resolverPrompt string
 func Resolve(xml string, critique types.Critique, story types.UserStory) string {
 	prompt := buildCorrectionPrompt(xml, critique.Issues, story)
 	// DEBUG: Uncomment this line to see the prompt sent to the resolver
-	// log.Printf("📝 Resolver Prompt:\n%s\n", prompt)
+	// log.Printf("📝 DEBUG: Resolver Prompt:\n%s\n", prompt)
 
 	response, err := callOllamaForCorrection(prompt)
 	if err != nil {
@@ -42,8 +42,16 @@ func Resolve(xml string, critique types.Critique, story types.UserStory) string 
 		return xml
 	}
 
-	// log.Printf("✅ Sanitized Corrected XML:\n%s\n", sanitizedXML)
-	return sanitizedXML
+	// 🌐 Optional: Fix layout overlaps post-sanitization
+	fixedXML, err := shared.ResolveOverlaps(sanitizedXML, 10)
+	if err != nil {
+		log.Printf("⚠️ Layout correction failed: %v", err)
+		return sanitizedXML
+	}
+
+	// log.Printf("✅ Fixed Corrected XML:\n%s\n", sanitizedXML)
+	return fixedXML
+
 }
 
 // buildCorrectionPrompt fills the embedded resolver prompt template with values

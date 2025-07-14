@@ -3,6 +3,7 @@ You are a Draw.io layout generator. Given a user interface view, output **only v
 View Name: {{view_name}}  
 View Type: {{view_type}}  
 Components: {{components}}
+User Story: {{story_narrative}}
 
 Instructions:
 - Output must begin with <mxGraphModel> and include a single <root> element.

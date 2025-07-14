@@ -26,7 +26,7 @@ func Audit(story types.UserStory, xml string) types.Critique {
 	prompt := buildAuditPrompt(story, xml)
 
 	// DEBUG: Uncomment this line to see the prompt sent to the auditor
-	// log.Printf("📝 Audit Prompt:\n%s\n", prompt)
+	// log.Printf("📝 DEBUG: Audit Prompt:\n%s\n", prompt)
 
 	response, err := callOllama(prompt)
 	if err != nil {
