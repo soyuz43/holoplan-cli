@@ -17,11 +17,13 @@ var builderPrompt string
 
 // Build takes a ViewLayout and generates Draw.io XML layout via LLM.
 // If anything fails, it returns an empty string and logs the reason.
-func Build(view types.ViewLayout) string {
+func Build(view types.ViewLayout, story types.UserStory) string {
 	// 🔧 Fill in template placeholders
+	components := strings.Join(view.Components, ", ")
 	prompt := strings.ReplaceAll(builderPrompt, "{{view_name}}", view.Name)
 	prompt = strings.ReplaceAll(prompt, "{{view_type}}", view.Type)
-	prompt = strings.ReplaceAll(prompt, "{{components}}", strings.Join(view.Components, ", "))
+	prompt = strings.ReplaceAll(prompt, "{{components}}", components)
+	prompt = strings.ReplaceAll(prompt, "{{story_narrative}}", story.Narrative)
 
 	// 📤 DEBUG: Print the final prompt before sending it to the LLM
 	// fmt.Printf("📤 DEBUG Prompt for view '%s':\n%s\n", view.Name, prompt)

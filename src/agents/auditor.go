@@ -25,7 +25,8 @@ type AuditResponse struct {
 func Audit(story types.UserStory, xml string) types.Critique {
 	prompt := buildAuditPrompt(story, xml)
 
-	log.Printf("📝 Audit Prompt:\n%s\n", prompt)
+	// DEBUG: Uncomment this line to see the prompt sent to the auditor
+	// log.Printf("📝 DEBUG: Audit Prompt:\n%s\n", prompt)
 
 	response, err := callOllama(prompt)
 	if err != nil {
@@ -37,7 +38,6 @@ func Audit(story types.UserStory, xml string) types.Critique {
 }
 
 func buildAuditPrompt(story types.UserStory, xml string) string {
-	// fill in the embedded template instead of fmt.Sprintf inline block
 	prompt := auditorPrompt
 	prompt = strings.ReplaceAll(prompt, "{{story}}", story.Narrative)
 	prompt = strings.ReplaceAll(prompt, "{{xml}}", xml)
@@ -55,23 +55,30 @@ func extractIssues(text string) []string {
 		return []string{"Malformed LLM response: invalid JSON format"}
 	}
 
+	// Normalize and drop false positives
+	if len(auditResp.Issues) == 1 && strings.ToLower(strings.TrimSpace(auditResp.Issues[0])) == "no issues" {
+		log.Printf("✅ LLM response indicates no issues")
+		return nil
+	}
+
 	if len(auditResp.Issues) == 0 {
 		log.Printf("✅ LLM response has no issues (empty issues array)")
 		return nil
 	}
 
-	log.Printf("📌 Found %d valid issues: %v", len(auditResp.Issues), auditResp.Issues)
+	log.Printf("📌 Found %d actionable issues: %v", len(auditResp.Issues), auditResp.Issues)
 	return auditResp.Issues
 }
 
 func callOllama(prompt string) (string, error) {
 	body := map[string]interface{}{
-		"model":  "llama3.1:8b",
+		"model":  "qwen2.5-coder:7b-instruct-q6_K",
 		"prompt": prompt,
 		"stream": false,
 		"format": "json",
 		"options": map[string]float64{
 			"temperature": 0.0,
+			"seed":        42,
 		},
 	}
 	b, err := json.Marshal(body)
@@ -89,7 +96,6 @@ func callOllama(prompt string) (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("failed to read response body: %w", err)
 	}
-	// log.Printf("📥 Raw Ollama Response:\n%s\n", string(bodyBytes))
 
 	var output struct {
 		Response string `json:"response"`
@@ -106,6 +112,5 @@ func callOllama(prompt string) (string, error) {
 	}
 
 	log.Printf("📤 LLM Response:\n%s\n", output.Response)
-
 	return output.Response, nil
 }

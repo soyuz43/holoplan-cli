@@ -11,10 +11,9 @@ type Critique struct {
 }
 
 func (c Critique) HasIssues() bool {
-	return len(c.Issues) > 0
+	return len(c.Issues) > 0 && !(len(c.Issues) == 1 && c.Issues[0] == "no issues")
 }
 
-// UserStory defines a single user story
 // UserStory defines a single user story
 type UserStory struct {
 	ID                string   `yaml:"id"`

@@ -1,4 +1,4 @@
-// src\runner\pipeline.go
+// src/runner/pipeline.go
 package runner
 
 import (
@@ -37,7 +37,7 @@ func RunPipeline(yamlPath string) error {
 		for _, view := range viewPlan.Views {
 			fmt.Printf("⚙️  Generating view: %s\n", view.Name)
 
-			xml, ok := safeBuild(view)
+			xml, ok := safeBuild(view, story) // Pass story to safeBuild
 			if !ok {
 				log.Printf("⚠️ Failed to build layout for view: %s\n", view.Name)
 				continue
@@ -83,6 +83,7 @@ func RunPipeline(yamlPath string) error {
 		return fmt.Errorf("failed to merge drawio files: %w", err)
 	}
 
+	fmt.Println("[✓] Pipeline completed successfully")
 	return nil
 }
 
@@ -101,9 +102,9 @@ func safeChunk(story types.UserStory) (types.ViewPlan, bool) {
 	return agents.Chunk(story), true
 }
 
-func safeBuild(view types.ViewLayout) (string, bool) {
+func safeBuild(view types.ViewLayout, story types.UserStory) (string, bool) {
 	defer recoverLLM("Build")
-	xml := agents.Build(view)
+	xml := agents.Build(view, story) // Pass story to Build
 	// Assume build succeeded unless validation fails
 	ok := true
 	// Validate XML syntax
