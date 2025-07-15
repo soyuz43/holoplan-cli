@@ -12,6 +12,7 @@ You are a critical UI reviewer for Draw.io wireframes. Your task is to evaluate 
 - If the XML satisfies all explicit user story requirements, return `{"issues": ["no issues"]}`.
 - If there are issues, list only specific, actionable mismatches, excluding "no issues".
 - **Do not** include validation messages, counts, collision checks, or text outside the JSON structure.
+Note: Phrases like “List of Orders” and “Order List” are semantically equivalent and should be treated as matching.
 
 **User Story**:
 ---

@@ -22,8 +22,8 @@ type AuditResponse struct {
 	Issues []string `json:"issues"`
 }
 
-func Audit(story types.UserStory, xml string) types.Critique {
-	prompt := buildAuditPrompt(story, xml)
+func Audit(narrative string, xml string) types.Critique {
+	prompt := buildAuditPrompt(narrative, xml)
 
 	// DEBUG: Uncomment this line to see the prompt sent to the auditor
 	// log.Printf("📝 DEBUG: Audit Prompt:\n%s\n", prompt)
@@ -37,9 +37,9 @@ func Audit(story types.UserStory, xml string) types.Critique {
 	return types.Critique{Issues: issues}
 }
 
-func buildAuditPrompt(story types.UserStory, xml string) string {
+func buildAuditPrompt(narrative string, xml string) string {
 	prompt := auditorPrompt
-	prompt = strings.ReplaceAll(prompt, "{{story}}", story.Narrative)
+	prompt = strings.ReplaceAll(prompt, "{{story}}", narrative)
 	prompt = strings.ReplaceAll(prompt, "{{xml}}", xml)
 	return prompt
 }
@@ -72,7 +72,7 @@ func extractIssues(text string) []string {
 
 func callOllama(prompt string) (string, error) {
 	body := map[string]interface{}{
-		"model":  "qwen2.5-coder:7b-instruct-q6_K",
+		"model":  "qwen2.5-coder:14b-instruct-q5_K_M",
 		"prompt": prompt,
 		"stream": false,
 		"format": "json",

@@ -18,9 +18,9 @@ import (
 //go:embed prompts/resolver_prompt.txt
 var resolverPrompt string
 
-// Resolve uses an LLM to repair layout XML based on critique feedback and user story
-func Resolve(xml string, critique types.Critique, story types.UserStory) string {
-	prompt := buildCorrectionPrompt(xml, critique.Issues, story)
+// Resolve uses an LLM to repair layout XML based on critique feedback and view-specific narrative
+func Resolve(xml string, critique types.Critique, narrative string) string {
+	prompt := buildCorrectionPrompt(xml, critique.Issues, narrative)
 	// DEBUG: Uncomment this line to see the prompt sent to the resolver
 	// log.Printf("📝 DEBUG: Resolver Prompt:\n%s\n", prompt)
 
@@ -51,14 +51,13 @@ func Resolve(xml string, critique types.Critique, story types.UserStory) string 
 
 	// log.Printf("✅ Fixed Corrected XML:\n%s\n", sanitizedXML)
 	return fixedXML
-
 }
 
 // buildCorrectionPrompt fills the embedded resolver prompt template with values
-func buildCorrectionPrompt(xml string, issues []string, story types.UserStory) string {
+func buildCorrectionPrompt(xml string, issues []string, narrative string) string {
 	prompt := resolverPrompt
 	prompt = strings.ReplaceAll(prompt, "{{issues}}", formatList(issues))
-	prompt = strings.ReplaceAll(prompt, "{{story}}", story.Narrative)
+	prompt = strings.ReplaceAll(prompt, "{{story}}", narrative)
 	prompt = strings.ReplaceAll(prompt, "{{xml}}", xml)
 	return prompt
 }
