@@ -66,6 +66,7 @@ type ViewPlan struct {
 type ViewLayout struct {
 	Name       string     `json:"name"`                 // e.g., "HomePage"
 	Type       string     `json:"type"`                 // e.g., "primary", "modal"
+	Narrative  string     `json:"narrative"`            // specific slice of the story
 	Components Components `json:"components,omitempty"` // flexible parsing
 }
 
