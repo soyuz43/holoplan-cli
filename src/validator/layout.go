@@ -53,14 +53,50 @@ func CheckLayout(raw string) error {
 		return fmt.Errorf("❌ XML parsing failed after sanitize: %w", err)
 	}
 
-	var renderables []mxCell
+	// Build ID → cell map and group children
+	idMap := make(map[string]mxCell)
+	children := make(map[string][]mxCell)
+	var roots []mxCell
+
 	for _, cell := range model.Cells {
-		if cell.Vertex == "1" {
-			renderables = append(renderables, cell)
+		idMap[cell.ID] = cell
+		if cell.Parent != "" {
+			children[cell.Parent] = append(children[cell.Parent], cell)
+		} else {
+			roots = append(roots, cell)
 		}
 	}
 
-	fmt.Printf("🔎 Validating %d visible elements\n", len(renderables))
+	// Flatten with absolute coordinates
+	var allRenderables []mxCell
+	var visit func(parent *mxCell, cell mxCell)
+	visit = func(parent *mxCell, cell mxCell) {
+		absCell := cell
+		if parent != nil {
+			absCell.Geometry.X += parent.Geometry.X
+			absCell.Geometry.Y += parent.Geometry.Y
+		}
+		allRenderables = append(allRenderables, absCell)
+
+		// Recurse into children
+		for _, child := range children[cell.ID] {
+			visit(&absCell, child)
+		}
+	}
+
+	for _, root := range roots {
+		visit(nil, root)
+	}
+
+	// Filter only vertex cells (renderable)
+	var renderables []mxCell
+	for _, c := range allRenderables {
+		if c.Vertex == "1" {
+			renderables = append(renderables, c)
+		}
+	}
+
+	fmt.Printf("🔎 Validating %d visible elements (with hierarchy)\n", len(renderables))
 
 	if err := checkCollisions(renderables); err != nil {
 		return err
