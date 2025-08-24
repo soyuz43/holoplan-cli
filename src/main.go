@@ -19,6 +19,7 @@ func main() {
 	}
 
 	var storiesPath string
+	var format string
 
 	var runCmd = &cobra.Command{
 		Use:   "run",
@@ -35,15 +36,16 @@ func main() {
 				storiesPath = strings.TrimSpace(input)
 			}
 
-			if err := runner.RunPipeline(storiesPath); err != nil {
+			if err := runner.RunPipeline(storiesPath, format); err != nil {
 				fmt.Println("[x] Pipeline failed:", err)
 				os.Exit(1)
 			}
-
 		},
 	}
 
 	runCmd.Flags().StringVarP(&storiesPath, "stories", "s", "", "Path to user stories YAML file")
+	runCmd.Flags().StringVarP(&format, "format", "f", "drawio", "Output format: drawio or figma")
+
 	rootCmd.AddCommand(runCmd)
 
 	if err := rootCmd.Execute(); err != nil {
