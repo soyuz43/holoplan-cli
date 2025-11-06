@@ -28,12 +28,6 @@
 
   * `qwen2.5-coder:7b-instruct-q6_K` (for layout and correction)
   * `llama3.1:8b` and `qwen2.5-coder:3b-instruct-q8_0` (for critique and chunking)
-  
-Let’s integrate your `install.ps1` script into the `README.md` with clear instructions for Windows 10/11 users, including:
-
-* Setup guidance for PowerShell users
-* Notes about adding `~/bin` to their PATH if not already present
-* Emphasis that this script builds and installs the binary
 
 ---
 
