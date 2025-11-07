@@ -7,7 +7,7 @@ $targetBinary = Join-Path $targetBinDir $binaryName
 
 # Ensure target directory exists
 if (-not (Test-Path $targetBinDir)) {
-    Write-Host "📁 Creating bin directory at $targetBinDir"
+    Write-Host "Creating bin directory at $targetBinDir"
     New-Item -ItemType Directory -Path $targetBinDir | Out-Null
 }
 
@@ -18,12 +18,12 @@ if (Test-Path $targetBinary) {
 }
 
 # Build from src/
-Write-Host "🚧 Building $binaryName from: $projectPath\src"
+Write-Host "Building $binaryName from: $projectPath\src"
 go build -o $targetBinary "$projectPath\src"
 
 if ($LASTEXITCODE -eq 0) {
-    Write-Host "✅ $binaryName installed to $targetBinDir"
+    Write-Host "$binaryName installed to $targetBinDir"
 } else {
-    Write-Error "❌ Build failed. Check compilation errors."
+    Write-Error "Build failed. Check compilation errors."
     exit 1
 }
