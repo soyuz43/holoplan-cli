@@ -2,11 +2,11 @@
 
 **Holoplan CLI** is a deterministic local-first CLI tool that generates wireframe layouts (in Draw.io XML format) from a YAML file of user stories. It uses a modular LLM pipeline to chunk stories into UI views, generate layouts, critique and correct them, and validate the result—without relying on a rigid DSL.
 
-> ⚙️ **Goal:** Replace domain-specific UI compilers with zero-temperature LLMs for fast, reviewable wireframe generation.
+> **Goal:** Replace domain-specific UI compilers with zero-temperature LLMs for fast, reviewable wireframe generation.
 
 ---
 
-## ✨ Features
+## Features
 
 - **YAML-based User Story Input**
 - **LLM-based Story Chunking**
@@ -18,9 +18,9 @@
 
 ---
 
-## 🔧 Usage
+## Usage
 
-### ✅ Requirements
+### Requirements
 
 * Go 1.20+
 * [Ollama](https://ollama.com/) installed and running locally
@@ -31,9 +31,9 @@
 
 ---
 
-### 🏁 Installation & Running
+### Installation & Running
 
-#### 🪟 Windows 10/11 (PowerShell)
+#### Windows 10/11 (PowerShell)
 
 Run the included PowerShell script to build and install the CLI to your local `~/bin` directory:
 
@@ -45,7 +45,7 @@ This will:
 
 * Build `holoplan.exe` from `src/`
 * Install it to `C:\Users\<you>\bin\holoplan.exe`
-* ✅ You’ll see a success message if it worked
+* You’ll see a success message if it worked
 
 👉 Make sure `C:\Users\<you>\bin\` is added to your system's **PATH**:
 
@@ -59,7 +59,7 @@ Once installed, you can run it from any terminal:
 holoplan --stories examples/user_stories.yaml
 ```
 
-#### 🐧 Linux / macOS
+#### Linux / macOS
 
 You can build and run directly:
 
@@ -78,7 +78,7 @@ holoplan --stories examples/user_stories.yaml
 
 ---
 
-## 🚀 Running the Pipeline
+## Running the Pipeline
 
 Once installed, you can generate UI layouts from a user story file using the `run` command:
 
@@ -101,7 +101,7 @@ This command will:
 5. Validate component positioning and spacing
 6. Save the resulting `.drawio.xml` files into the `output/` directory
 
-### 🔧 Options
+### Options
 
 | Flag              | Description                           | Required |
 | ----------------- | ------------------------------------- | -------- |
@@ -112,7 +112,7 @@ This command will:
 ---
 
 
-### 📁 Output
+### Output
 
 * All generated views saved to `./output/`
 * Final merged layout: `output/final.drawio.xml`
@@ -120,7 +120,7 @@ This command will:
 
 ---
 
-## 🧠 Architecture Overview
+## Architecture Overview
 
 ```
 UserStory.yaml
@@ -143,7 +143,7 @@ Merge all → final.drawio.xml
 
 ---
 
-## 🧪 Examples
+## Examples
 
 ```yaml
 # examples/user_stories.yaml
@@ -156,7 +156,7 @@ Merge all → final.drawio.xml
 
 ---
 
-## 🧭 Roadmap Ideas
+## Roadmap Ideas
 
 * [ ] Critique Logs
 * [ ] CLI flags for output path, skip audit, etc.
@@ -166,7 +166,7 @@ Merge all → final.drawio.xml
 
 ---
 
-## 🤖 Models + Prompts
+## Models + Prompts
 
 * Uses LLMs to emulate deterministic UI compilers
 * Prompts live in `src/agents/prompts/`
@@ -174,11 +174,11 @@ Merge all → final.drawio.xml
 
 ---
 
-## 🛠️ Developer Makefile Commands
+## Developer Makefile Commands
 
 If you're actively working on Holoplan, use the built-in `Makefile` for common dev tasks:
 
-### 🔄 Regenerate Wireframes
+### Regenerate Wireframes
 
 ```bash
 make wireframes
@@ -186,7 +186,7 @@ make wireframes
 
 Runs the full Holoplan pipeline on `examples/user_stories.yaml`, regenerating all layouts and merged output.
 
-### 🧹 Clear Output Directory
+### Clear Output Directory
 
 ```bash
 make empty
@@ -194,7 +194,7 @@ make empty
 
 Deletes all `.drawio` and `.drawio.xml` files from the `output/` directory.
 
-### 🏗️ Rebuild & Install CLI
+### Rebuild & Install CLI
 
 ```bash
 make install
@@ -204,7 +204,7 @@ Triggers the PowerShell-based installer to rebuild the `holoplan.exe` binary and
 
 
 ---
-## 📄 License
+## License
 
 MIT © [soyuz43](https://github.com/soyuz43)
 
