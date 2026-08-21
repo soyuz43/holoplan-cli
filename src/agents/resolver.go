@@ -74,7 +74,7 @@ func formatList(items []string) string {
 // callOllamaForCorrection sends the filled prompt to Ollama and returns the raw XML
 func callOllamaForCorrection(prompt string) (string, error) {
 	body := map[string]interface{}{
-		"model":  "qwen2.5-coder:7b-instruct-q6_K",
+		"model":  "huihui_ai/qwen3.5-abliterated:9b",
 		"prompt": prompt,
 		"stream": false,
 		"options": map[string]float64{

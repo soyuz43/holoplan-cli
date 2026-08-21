@@ -53,10 +53,10 @@ Each story must include:
 
 | Agent      | Responsibility                                     | LLM Model       | Output Format           |
 | ---------- | -------------------------------------------------- | --------------- | ----------------------- |
-| `Chunker`  | Breaks story into view layouts                     | `qwen2.5-coder` | `types.ViewPlan` (JSON) |
-| `Builder`  | Generates raw Draw\.io XML for each view           | `qwen2.5-coder` | `string` (XML)          |
-| `Auditor`  | Compares user story to layout and finds mismatches | `llama3.1:8b`   | `{"issues": [...]}`     |
-| `Resolver` | Fixes XML layout based on audit issues             | `qwen2.5-coder` | `{"xml": "<...>"}`      |
+| `Chunker`  | Breaks story into view layouts                     | `huihui_ai/qwen3.5-abliterated:9b` | `types.ViewPlan` (JSON) |
+| `Builder`  | Generates raw Draw\.io XML for each view           | `huihui_ai/qwen3.5-abliterated:9b` | `string` (XML)          |
+| `Auditor`  | Compares user story to layout and finds mismatches | `huihui_ai/qwen3.5-abliterated:9b`   | `{"issues": [...]}`     |
+| `Resolver` | Fixes XML layout based on audit issues             | `huihui_ai/qwen3.5-abliterated:9b` | `{"xml": "<...>"}`      |
 
 All LLM calls are made to `localhost:11434` via the Ollama API.
 

@@ -26,8 +26,8 @@
 * [Ollama](https://ollama.com/) installed and running locally
 * And the following models:
 
-  * `qwen2.5-coder:7b-instruct-q6_K` (for layout and correction)
-  * `llama3.1:8b` and `qwen2.5-coder:3b-instruct-q8_0` (for critique and chunking)
+  * `huihui_ai/qwen3.5-abliterated:9b` (for layout and correction)
+  * `huihui_ai/qwen3.5-abliterated:9b` (for all tasks)
 
 ---
 
@@ -207,6 +207,5 @@ Triggers the PowerShell-based installer to rebuild the `holoplan.exe` binary and
 ## License
 
 MIT © [soyuz43](https://github.com/soyuz43)
-
 
 

@@ -107,7 +107,7 @@ func extractFigmaJSON(raw string) string {
 // callOllamaForLayout streams a completion from Ollama and returns the full text.
 func callOllamaForLayout(prompt string) (string, error) {
 	body := map[string]interface{}{
-		"model":  "qwen2.5-coder:7b-instruct-q6_K",
+		"model":  "huihui_ai/qwen3.5-abliterated:9b",
 		"prompt": prompt,
 		"options": map[string]interface{}{
 			"temperature": 0.0,
