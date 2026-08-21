@@ -68,7 +68,7 @@ func Chunk(story types.UserStory) types.ViewPlan {
 	)
 
 	payload := map[string]interface{}{
-		"model":  "qwen2.5-coder:7b-instruct-q6_K",
+		"model":  "huihui_ai/qwen3.5-abliterated:9b",
 		"stream": false,
 		"options": map[string]interface{}{
 			"temperature": 0.0,

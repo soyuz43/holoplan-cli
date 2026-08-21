@@ -72,7 +72,7 @@ func extractIssues(text string) []string {
 
 func callOllama(prompt string) (string, error) {
 	body := map[string]interface{}{
-		"model":  "qwen2.5-coder:14b-instruct-q5_K_M",
+		"model":  "huihui_ai/qwen3.5-abliterated:9b",
 		"prompt": prompt,
 		"stream": false,
 		"format": "json",
