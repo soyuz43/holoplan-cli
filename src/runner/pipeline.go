@@ -17,7 +17,7 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-const MaxCorrections = 1
+const MaxCorrections = 2
 
 // RunPipeline now accepts a format ("drawio" or "figma")
 func RunPipeline(yamlPath string, format string) error {
@@ -46,33 +46,44 @@ func RunPipeline(yamlPath string, format string) error {
 
 			// Only audit and resolve for Draw.io (XML-based)
 			if format == "drawio" {
-				// Audit the initial XML using view.Narrative
-				critique, ok := safeAudit(view.Narrative, output)
-				if !ok {
-					log.Printf("⚠️ Failed to audit layout for view: %s\n", view.Name)
-					continue
-				}
+				var validatorErr error
 
-				// Attempt resolution only if there are issues and within MaxCorrections
-				if critique.HasIssues() {
-					fmt.Printf("🔁 Correction attempt 1 for %s\n", view.Name)
-					// Pass view.Narrative to Resolve
-					resolvedXML, ok := safeResolve(output, critique, view.Narrative)
-					if ok {
-						output = resolvedXML // Use resolved XML if successful
-					} else {
-						log.Printf("⚠️ Resolve failed at attempt 1 — proceeding with original XML\n")
+				for attempt := 1; attempt <= MaxCorrections; attempt++ {
+					// 1. AUDIT
+					critique, auditOK := safeAudit(view.Narrative, output)
+					if !auditOK {
+						log.Printf("⚠️ Audit failed on attempt %d for view: %s\n", attempt, view.Name)
+						break
 					}
-				} else {
-					log.Printf("✅ No issues found in initial audit for view: %s", view.Name)
+
+					// If no semantic issues, break early
+					if !critique.HasIssues() {
+						log.Printf("✅ No issues found on attempt %d for view: %s", attempt, view.Name)
+						break
+					}
+
+					// 2. RESOLVE
+					fmt.Printf("🔁 Correction attempt %d/%d for %s\n", attempt, MaxCorrections, view.Name)
+					resolvedXML, resolveOK := safeResolve(output, critique, view.Narrative)
+					if !resolveOK {
+						log.Printf("⚠️ Resolve failed on attempt %d — keeping previous XML\n", attempt)
+						break
+					}
+					output = resolvedXML
+
+					// 3. VALIDATE (inside the loop)
+					output = shared.ForceQuoteAllAttributes(output)
+					validatorErr = validator.CheckLayout(output)
+					if validatorErr == nil {
+						fmt.Println("✅ Spatial layout passed")
+					} else {
+						log.Printf("⚠️ Spatial validation failed on attempt %d: %v\n", attempt, validatorErr)
+					}
 				}
 
-				// Skip re-auditing the corrected XML
-				output = shared.ForceQuoteAllAttributes(output)
-				if err := validator.CheckLayout(output); err != nil {
-					log.Printf("❌ Layout validation failed: %v", err)
-				} else {
-					fmt.Println("✅ Spatial layout passed")
+				// Final validation log
+				if validatorErr != nil {
+					log.Printf("❌ Layout validation failed after %d attempt(s): %v", MaxCorrections, validatorErr)
 				}
 			} else {
 				// For Figma, no audit/resolver/validation yet
