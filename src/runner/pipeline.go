@@ -47,8 +47,10 @@ func RunPipeline(yamlPath string, format string) error {
 			// Only audit and resolve for Draw.io (XML-based)
 			if format == "drawio" {
 				var validatorErr error
+				lastAttempt := 0
 
 				for attempt := 1; attempt <= MaxCorrections; attempt++ {
+					lastAttempt = attempt
 					// 1. AUDIT
 					critique, auditOK := safeAudit(view.Narrative, output)
 					if !auditOK {
@@ -81,9 +83,9 @@ func RunPipeline(yamlPath string, format string) error {
 					}
 				}
 
-				// Final validation log
+				// Final validation log reports the actual number of attempts made
 				if validatorErr != nil {
-					log.Printf("❌ Layout validation failed after %d attempt(s): %v", MaxCorrections, validatorErr)
+					log.Printf("❌ Layout validation failed after %d attempt(s): %v", lastAttempt, validatorErr)
 				}
 			} else {
 				// For Figma, no audit/resolver/validation yet
