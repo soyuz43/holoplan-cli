@@ -82,3 +82,30 @@ type AuditReport struct {
 func (a AuditReport) HasIssues() bool {
 	return !a.Pass
 }
+
+// FigmaBoundingBox mirrors absoluteBoundingBox in the Figma JSON output.
+type FigmaBoundingBox struct {
+	X      float64 `json:"x"`
+	Y      float64 `json:"y"`
+	Width  float64 `json:"width"`
+	Height float64 `json:"height"`
+}
+
+// FigmaNode is a single node in the Figma document tree.
+type FigmaNode struct {
+	ID                  string            `json:"id"`
+	Name                string            `json:"name"`
+	Type                string            `json:"type"`
+	AbsoluteBoundingBox *FigmaBoundingBox `json:"absoluteBoundingBox"`
+	Visible             *bool             `json:"visible"`
+	Characters          string            `json:"characters,omitempty"`
+	Children            []FigmaNode       `json:"children,omitempty"`
+}
+
+// FigmaDocument is the top-level structure produced by the Figma builder.
+type FigmaDocument struct {
+	SchemaVersion int         `json:"schemaVersion"`
+	Document      FigmaNode   `json:"document"`
+	Components    interface{} `json:"components"`
+	Styles        interface{} `json:"styles"`
+}

@@ -38,6 +38,7 @@ func RunPipeline(yamlPath string, format string) error {
 		for _, view := range viewPlan.Views {
 			fmt.Printf("⚙️  Generating view: %s\n", view.Name)
 
+			var validationFailed bool
 			output, ok := safeBuild(view, story, format)
 			if !ok {
 				log.Printf("⚠️ Failed to build layout for view: %s\n", view.Name)
@@ -87,12 +88,14 @@ func RunPipeline(yamlPath string, format string) error {
 				if validatorErr != nil {
 					log.Printf("❌ Layout validation failed after %d attempt(s): %v", lastAttempt, validatorErr)
 				}
-			} else {
-				// For Figma, no audit/resolver/validation yet
-				fmt.Println("✅ Figma layout generated (no audit/validation yet)")
+			} else if format == "figma" {
+				validationFailed = validator.CheckFigmaLayout(output) != nil
+				if validationFailed {
+					log.Printf("⚠️ Figma layout validation failed for view '%s' — saving with .invalid suffix\n", view.Name)
+				}
 			}
 
-			err = saveOutput(story.ID, view.Name, output, format)
+			err = saveOutput(story.ID, view.Name, output, format, validationFailed)
 			if err != nil {
 				log.Printf("⚠️ Failed to save output: %v", err)
 			}
@@ -162,7 +165,7 @@ func recoverLLM(agent string) {
 }
 
 // Updated to save .json for Figma
-func saveOutput(storyID, viewName string, content string, format string) error {
+func saveOutput(storyID, viewName string, content string, format string, validationFailed bool) error {
 	if err := os.MkdirAll("output", os.ModePerm); err != nil {
 		return fmt.Errorf("failed to create output directory: %w", err)
 	}
@@ -172,7 +175,11 @@ func saveOutput(storyID, viewName string, content string, format string) error {
 
 	var filename string
 	if format == "figma" {
-		filename = filepath.Join("output", base+".figma.json")
+		suffix := ".figma.json"
+		if validationFailed {
+			suffix = ".invalid.figma.json"
+		}
+		filename = filepath.Join("output", base+suffix)
 	} else {
 		filename = filepath.Join("output", base+".drawio")
 	}
