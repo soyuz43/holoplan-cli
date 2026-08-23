@@ -10,7 +10,7 @@
 
 - **YAML-based User Story Input**
 - **LLM-based Story Chunking**
-- **Qwen2.5 Coder Model Layout Builder**
+- **Qwen3.5 LLM Layout Builder**
 - **Automated UI Critique + Correction Loop**
 - **Go-based Spatial Validation**
 - **Draw.io XML Output + Deterministic Output**
@@ -24,10 +24,8 @@
 
 * Go 1.20+
 * [Ollama](https://ollama.com/) installed and running locally
-* And the following models:
-
-  * `huihui_ai/qwen3.5-abliterated:9b` (for layout and correction)
-  * `huihui_ai/qwen3.5-abliterated:9b` (for all tasks)
+  * And the following model:
+    * `huihui_ai/qwen3.5-abliterated:9b` (used for all tasks: chunking, layout, audit, and correction)
 
 ---
 
@@ -116,7 +114,7 @@ This command will:
 
 * All generated views saved to `./output/`
 * Final merged layout: `output/final.drawio.xml`
-* Critique files: `output/[view_name].critique.txt` (if needed)
+* Critique logs are not saved to disk yet (see Roadmap). Failures are reported in the console during the run.
 
 ---
 
@@ -170,7 +168,7 @@ Merge all → final.drawio.xml
 
 * Uses LLMs to emulate deterministic UI compilers
 * Prompts live in `src/agents/prompts/`
-* Builder uses Qwen2.5; chunker/auditor use Llama3/Qwen2.5 variants
+* All agents use the huihui_ai/qwen3.5-abliterated:9b model
 
 ---
 
