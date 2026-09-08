@@ -28,11 +28,18 @@ func CheckFigmaLayout(rawJSON string) error {
 		return fmt.Errorf("figma JSON parsing failed: %w", err)
 	}
 
+	// P2: Explicit root node validation with clear error messages
 	if doc.Document.Type != "FRAME" {
 		return fmt.Errorf("figma root node type must be FRAME, got %q", doc.Document.Type)
 	}
 	if doc.Document.ID != "0:1" {
 		return fmt.Errorf("figma root node ID must be \"0:1\", got %q", doc.Document.ID)
+	}
+	if doc.Document.AbsoluteBoundingBox == nil {
+		return fmt.Errorf("figma root node must have absoluteBoundingBox")
+	}
+	if doc.Document.Visible == nil || !*doc.Document.Visible {
+		return fmt.Errorf("figma root node must be visible")
 	}
 
 	seenIDs := make(map[string]bool)
@@ -40,9 +47,12 @@ func CheckFigmaLayout(rawJSON string) error {
 		return err
 	}
 
+	// P1: Build ancestry map during collection for accurate parent-child detection
+	ancestry := make(map[string]string) // nodeID -> parentID
 	var boxes []types.FigmaNode
-	collectBoxes(&doc.Document, &boxes)
-	if err := checkFigmaCollisions(boxes); err != nil {
+	collectBoxesWithAncestry(&doc.Document, "", &boxes, &ancestry)
+
+	if err := checkFigmaCollisions(boxes, ancestry); err != nil {
 		return err
 	}
 
@@ -50,8 +60,6 @@ func CheckFigmaLayout(rawJSON string) error {
 }
 
 // validateNode recursively checks schema conformance for a node and its children.
-// parent is used to skip parent-child containment from collision detection later;
-// here it is unused but kept for future extension.
 func validateNode(node *types.FigmaNode, parent *types.FigmaNode, seenIDs map[string]bool) error {
 	if node.ID == "" {
 		return fmt.Errorf("figma node has empty id (name: %q)", node.Name)
@@ -85,24 +93,31 @@ func validateNode(node *types.FigmaNode, parent *types.FigmaNode, seenIDs map[st
 	return nil
 }
 
-// collectBoxes gathers all nodes with a bounding box for collision detection.
-func collectBoxes(node *types.FigmaNode, out *[]types.FigmaNode) {
+// NodeWithAncestry holds a FigmaNode along with its parent ID for collision detection.
+type NodeWithAncestry struct {
+	Node     types.FigmaNode
+	ParentID string // empty for root
+}
+
+// collectBoxesWithAncestry gathers all nodes with a bounding box and records their parent ID.
+func collectBoxesWithAncestry(node *types.FigmaNode, parentID string, out *[]types.FigmaNode, ancestry *map[string]string) {
 	if node.AbsoluteBoundingBox != nil {
 		*out = append(*out, *node)
+		(*ancestry)[node.ID] = parentID
 	}
 	for i := range node.Children {
-		collectBoxes(&node.Children[i], out)
+		collectBoxesWithAncestry(&node.Children[i], node.ID, out, ancestry)
 	}
 }
 
 // checkFigmaCollisions detects overlapping sibling bounding boxes.
 // Parent-child containment is not treated as a collision.
-func checkFigmaCollisions(nodes []types.FigmaNode) error {
+func checkFigmaCollisions(nodes []types.FigmaNode, ancestry map[string]string) error {
 	for i := 0; i < len(nodes); i++ {
 		a := nodes[i].AbsoluteBoundingBox
 		for j := i + 1; j < len(nodes); j++ {
 			// Skip parent-child pairs (containment is expected).
-			if isAncestor(nodes[i], nodes[j]) || isAncestor(nodes[j], nodes[i]) {
+			if isDescendant(nodes[i].ID, nodes[j].ID, ancestry) || isDescendant(nodes[j].ID, nodes[i].ID, ancestry) {
 				continue
 			}
 			b := nodes[j].AbsoluteBoundingBox
@@ -115,19 +130,19 @@ func checkFigmaCollisions(nodes []types.FigmaNode) error {
 	return nil
 }
 
-// isAncestor reports whether ancestor contains descendant in the tree by ID chain.
-// Since we only have flat copies, we approximate by checking if one node's box fully
-// contains the other AND one is a parent in the tree structure. However, we don't
-// retain tree structure here, so we use full containment as a proxy for parent-child.
-func isAncestor(a, b types.FigmaNode) bool {
-	ab := a.AbsoluteBoundingBox
-	bb := b.AbsoluteBoundingBox
-	if ab == nil || bb == nil {
-		return false
+// isDescendant reports whether descendant is a child (at any depth) of ancestor in the tree.
+func isDescendant(descendantID, ancestorID string, ancestry map[string]string) bool {
+	current := descendantID
+	for {
+		parent, ok := ancestry[current]
+		if !ok || parent == "" {
+			return false // reached root without finding ancestor
+		}
+		if parent == ancestorID {
+			return true
+		}
+		current = parent
 	}
-	return ab.X <= bb.X && ab.Y <= bb.Y &&
-		ab.X+ab.Width >= bb.X+bb.Width &&
-		ab.Y+ab.Height >= bb.Y+bb.Height
 }
 
 func boxesOverlapFigma(a, b *types.FigmaBoundingBox) bool {

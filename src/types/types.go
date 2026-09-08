@@ -104,8 +104,8 @@ type FigmaNode struct {
 
 // FigmaDocument is the top-level structure produced by the Figma builder.
 type FigmaDocument struct {
-	SchemaVersion int         `json:"schemaVersion"`
-	Document      FigmaNode   `json:"document"`
-	Components    interface{} `json:"components"`
-	Styles        interface{} `json:"styles"`
+	SchemaVersion int             `json:"schemaVersion"`
+	Document      FigmaNode       `json:"document"`
+	Components    json.RawMessage `json:"components"`
+	Styles        json.RawMessage `json:"styles"`
 }
