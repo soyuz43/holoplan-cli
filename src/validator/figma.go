@@ -16,6 +16,15 @@ var validFigmaNodeTypes = map[string]bool{
 	"COMPONENT": true,
 }
 
+// CollisionNode holds only the fields needed for collision detection.
+type CollisionNode struct {
+	ID                  string
+	Name                string
+	Type                string
+	AbsoluteBoundingBox *types.FigmaBoundingBox
+	Visible             *bool
+}
+
 // CheckFigmaLayout validates the structural schema and geometric layout
 // of a generated Figma JSON document.
 func CheckFigmaLayout(rawJSON string) error {
@@ -43,24 +52,23 @@ func CheckFigmaLayout(rawJSON string) error {
 	}
 
 	seenIDs := make(map[string]bool)
-	if err := validateNode(&doc.Document, nil, seenIDs); err != nil {
+	ancestry := make(map[string]string) // nodeID -> parentID
+	var collisionNodes []CollisionNode
+
+	// Combined validation and collection in a single traversal
+	if err := validateAndCollect(&doc.Document, "", seenIDs, &collisionNodes, &ancestry); err != nil {
 		return err
 	}
 
-	// P1: Build ancestry map during collection for accurate parent-child detection
-	ancestry := make(map[string]string) // nodeID -> parentID
-	var boxes []types.FigmaNode
-	collectBoxesWithAncestry(&doc.Document, "", &boxes, &ancestry)
-
-	if err := checkFigmaCollisions(boxes, ancestry); err != nil {
+	if err := checkFigmaCollisions(collisionNodes, ancestry); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-// validateNode recursively checks schema conformance for a node and its children.
-func validateNode(node *types.FigmaNode, parent *types.FigmaNode, seenIDs map[string]bool) error {
+// validateAndCollect recursively validates schema and collects collision nodes in one pass.
+func validateAndCollect(node *types.FigmaNode, parentID string, seenIDs map[string]bool, collisionNodes *[]CollisionNode, ancestry *map[string]string) error {
 	if node.ID == "" {
 		return fmt.Errorf("figma node has empty id (name: %q)", node.Name)
 	}
@@ -85,34 +93,27 @@ func validateNode(node *types.FigmaNode, parent *types.FigmaNode, seenIDs map[st
 		return fmt.Errorf("figma node %s (%s) has visible=false", node.ID, node.Name)
 	}
 
+	// Collect for collision detection (only needed fields, no Children slice)
+	*collisionNodes = append(*collisionNodes, CollisionNode{
+		ID:                  node.ID,
+		Name:                node.Name,
+		Type:                node.Type,
+		AbsoluteBoundingBox: node.AbsoluteBoundingBox,
+		Visible:             node.Visible,
+	})
+	(*ancestry)[node.ID] = parentID
+
 	for i := range node.Children {
-		if err := validateNode(&node.Children[i], node, seenIDs); err != nil {
+		if err := validateAndCollect(&node.Children[i], node.ID, seenIDs, collisionNodes, ancestry); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-// NodeWithAncestry holds a FigmaNode along with its parent ID for collision detection.
-type NodeWithAncestry struct {
-	Node     types.FigmaNode
-	ParentID string // empty for root
-}
-
-// collectBoxesWithAncestry gathers all nodes with a bounding box and records their parent ID.
-func collectBoxesWithAncestry(node *types.FigmaNode, parentID string, out *[]types.FigmaNode, ancestry *map[string]string) {
-	if node.AbsoluteBoundingBox != nil {
-		*out = append(*out, *node)
-		(*ancestry)[node.ID] = parentID
-	}
-	for i := range node.Children {
-		collectBoxesWithAncestry(&node.Children[i], node.ID, out, ancestry)
-	}
-}
-
 // checkFigmaCollisions detects overlapping sibling bounding boxes.
 // Parent-child containment is not treated as a collision.
-func checkFigmaCollisions(nodes []types.FigmaNode, ancestry map[string]string) error {
+func checkFigmaCollisions(nodes []CollisionNode, ancestry map[string]string) error {
 	for i := 0; i < len(nodes); i++ {
 		a := nodes[i].AbsoluteBoundingBox
 		for j := i + 1; j < len(nodes); j++ {

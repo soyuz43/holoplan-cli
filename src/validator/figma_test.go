@@ -2,6 +2,7 @@ package validator
 
 import (
 	"encoding/json"
+	"strings"
 	"testing"
 
 	"holoplan-cli/src/types"
@@ -91,9 +92,9 @@ func TestCheckFigmaLayout(t *testing.T) {
 			name: "root missing absoluteBoundingBox",
 			input: makeDoc(
 				types.FigmaNode{
-					ID:     "0:1",
-					Name:   "Root Frame",
-					Type:   "FRAME",
+					ID:      "0:1",
+					Name:    "Root Frame",
+					Type:    "FRAME",
 					Visible: func() *bool { v := true; return &v }(),
 				},
 			),
@@ -129,9 +130,9 @@ func TestCheckFigmaLayout(t *testing.T) {
 			input: makeDoc(
 				makeNode("0:1", "Root Frame", "FRAME", 0, 0, 800, 600, true,
 					types.FigmaNode{
-						ID:     "0:2",
-						Name:   "No Box",
-						Type:   "TEXT",
+						ID:      "0:2",
+						Name:    "No Box",
+						Type:    "TEXT",
 						Visible: func() *bool { v := true; return &v }(),
 					},
 				),
@@ -300,23 +301,10 @@ func TestCheckFigmaLayout(t *testing.T) {
 				if err == nil {
 					t.Fatal("expected error, got nil")
 				}
-				if !contains(err.Error(), tt.expectError) {
+				if !strings.Contains(err.Error(), tt.expectError) {
 					t.Fatalf("error %q does not contain expected substring %q", err.Error(), tt.expectError)
 				}
 			}
 		})
 	}
-}
-
-func contains(s, substr string) bool {
-	return len(s) >= len(substr) && (s == substr || len(substr) == 0 || findSubstring(s, substr))
-}
-
-func findSubstring(s, substr string) bool {
-	for i := 0; i <= len(s)-len(substr); i++ {
-		if s[i:i+len(substr)] == substr {
-			return true
-		}
-	}
-	return false
 }
