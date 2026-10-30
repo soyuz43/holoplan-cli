@@ -100,6 +100,20 @@ func TestCheckSemanticZones(t *testing.T) {
 			},
 		},
 		{
+			name:   "navbar at prompt start y=100 passes",
+			cells: []mxCell{
+				makeCell("3", "Navbar", 0, 100, 100, 30),
+				makeCell("4", "Body", 0, 200, 100, 400),
+			},
+		},
+		{
+			name:   "non-zone label containing foot substring ignored",
+			cells: []mxCell{
+				makeCell("3", "Football Scores", 0, 300, 100, 100),
+				makeCell("4", "Body", 0, 0, 100, 1000),
+			},
+		},
+		{
 			name:   "empty cell slice passes",
 			cells:  []mxCell{},
 		},
@@ -123,3 +137,4 @@ func TestCheckSemanticZones(t *testing.T) {
 		})
 	}
 }
+
