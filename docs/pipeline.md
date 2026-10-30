@@ -34,7 +34,7 @@ Each stage in the pipeline uses deterministic or guided language model calls to 
       per View
 ```
 
-Each story may go through multiple correction cycles (`MaxCorrections = 3`) until the audit passes or retry limit is reached.
+Each story may go through multiple correction cycles (`MaxCorrections = 2`) until the audit passes or retry limit is reached.
 
 ---
 
